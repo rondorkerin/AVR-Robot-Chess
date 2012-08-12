@@ -1,0 +1,20 @@
+#---- Setup for ATxmega128A1U
+-device     ATXMEGA128A1
+-hardware   RS232
+-baudrate   115200
+-port       COM30
+
+#---- Load a HEX file
+-operation
+	ONFAIL ABORT
+	ASSERT PASS
+
+echo "Load HEX file:"
+	ERASE F
+	BLANKCHECK
+	MEMORY FLASH
+	LOADBUFFER xmega-a1_xplained-demo.hex
+	PROGRAM
+	VERIFY
+	START
+	RESET 0

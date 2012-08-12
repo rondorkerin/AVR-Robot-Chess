@@ -1,0 +1,37 @@
+8/8/2012
+I ran through some example code for the A1Xplained kit. There's a demo program. I skimmed through it, but found that I was
+unable to upload modified code to my kit. Atmel Studio 6 doesn't recognize it.
+
+8/9/2012
+I realized that the first reason it doesn't recognize it is that I don't have a debugger installed. I found a STK500v2 compatible AVR programmer by Olimex
+that should be able to connect. I have also begun with the atmel Xmega training tutorials which I will do presently. 
+5:00 PM
+I tried the training and it failed. I couldn't recognize the device. So I looked here:
+http://www.avrfreaks.net/index.php?name=PNphpBB2&file=printview&t=109825&start=20 I found I need FLIP,
+
+FINALLY got the thing working. Had about 6 or 7 drivers in a folder.. none of them were working. So I swithced the jumper cable 
+to JTAG 1 and 2 (top left and bottom left, facing it) and browsed for a driver. It worked. I'm happy. Still more to do though.
+Following the Getting started guide.
+
+Now I can load flip, select COM4, and load a hex file to load firmware into the board. Debugging doesn't work. But at least
+I can upload code. I guess I can create an elaborate system of using LEDs to debug...
+
+7:00 PM
+Now I'm getting WinAVR to try that. Im reading this 
+http://fourwalledcubicle.com/blog/2010/02/mein-server/ to AVRISP-MKII make one
+
+8/11/2012
+I opened up AVR-MAX and started trying to port it. I quickly got confused as it includes a lot of windows headers. It doesn't seem to be for an AVR but it says it is.
+Maybe it's simply a test program that uses the windows headers. Anyway, I found this thing called Xmega lab that has an adaption of the chess engine on board.
+I am attempting to sift through it now to see if it takes a more embedded approach.
+
+6:49 PM
+I saw its approach was very integrated and thus it would be very difficult to test with. I added avrMicroMax as a codelite
+project in the examples directory. I can build it and interact with it to test it. My goal is to figure out exactly how it works
+by studying the code and stepping through it, and port the part that doesn't require a windows interface to the AVR project
+while still exposing an interface to the main module. After that I'll examine a single test case in the debugger
+and make sure it can be called through the main module in my AVR code by examining it on the simulator.
+
+9:00 PM
+Okay so I got the engine to work and I'm attempting to refactor it into something with a usable interface. currently everything
+is in a main function and I'm studying the code to move pieces into the desired interface functions.
