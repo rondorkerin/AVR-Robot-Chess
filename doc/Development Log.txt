@@ -62,5 +62,16 @@ These are the things I need to return from the AI move function:
 2.  If the AI resigned
 3.  Where the AI moved
 
+-Currently there's an error when I attempt to put in an invalid move and call AI. I need to check that it's invalid. 
+-Things that may be useless and I should get rid of: 
+----Board History
+----Timing!
 
+Basically, I'm stripping down this guy's engine to the bone... it's good to strip down rather than build up, though. 
 
+ *  	Note: I need to figure out if I took a piece. The problem is the D function
+ *    actually moves every time it is searching. So I have to find some way of comparing the board
+ * 	   states before and after the move. Maybe this can be accomplished with the board pointer. 
+ 
+ The alternative to returning the tookPiece flags is checking it manually and keeping my own copy of the board outside of the interface. That is a terrible idea as
+ there is already a copy of the board in memory.

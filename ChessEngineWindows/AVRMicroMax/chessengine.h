@@ -42,7 +42,7 @@ int StartKey;
 /* convert intger argument back to engine move representation */
 #define UNPACK_MOVE(A) K = (A)>>8 & 255; L = (A) & 255;
 
-enum  GameMode{
+enum GameMode{
 	PlayerVsAI = 0,
 	AIVsAI,
 	PlayerVsPlayer
@@ -58,9 +58,11 @@ enum GameResult {
 };
 
 // Public functions
-
-void AIMove();
+void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove);
+char PlayerMove(char* move, int* outGameResult,int* outTookPieceFlag,int* outUnknownMoveFlag, int* outIllegalMoveFlag);
 void NewGame();
+void InitEngine();
+void InitGame();
 
 
 // private functions
@@ -70,10 +72,7 @@ void NewGame();
  */
 short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n); 
 void CopyBoard(int s);
-void PrintMove();
-void InitEngine();
-void InitGame();
-void SendCommand(char* command);
+int GameStatusResult();
 
 /* Global variables visible to engine. Normally they */
 /* would be replaced by the names under which these  */
