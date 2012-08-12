@@ -42,21 +42,26 @@ int StartKey;
 /* convert intger argument back to engine move representation */
 #define UNPACK_MOVE(A) K = (A)>>8 & 255; L = (A) & 255;
 
-enum GameMode {
+enum  GameMode{
 	PlayerVsAI = 0,
 	AIVsAI,
 	PlayerVsPlayer
 };
 
+enum GameResult { 
+	InPlay = 0,
+	DrawByRepetition,
+	StaleMate,
+	BlackMates,
+	WhiteMates,
+	DrawByFiftyMoveRule
+};
+
 // Public functions
-void InitEngine();
-void InitGame(int gameMode);
-void Think();
-void DoMove();
-void ReadMove();
-int Legal();
-void ClearBoard();
-void PutPiece();
+
+void AIMove();
+void NewGame();
+
 
 // private functions
 /* (q,l)=window, e=current eval. score
@@ -66,6 +71,9 @@ void PutPiece();
 short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n); 
 void CopyBoard(int s);
 void PrintMove();
+void InitEngine();
+void InitGame();
+void SendCommand(char* command);
 
 /* Global variables visible to engine. Normally they */
 /* would be replaced by the names under which these  */
@@ -112,8 +120,6 @@ Z;                                                  /* Z=recursion counter */
 
 unsigned short r = 1;                     /* pseudo random generator seed */
 
-short _gameMode = 0;
-
 void mysrand(unsigned short r_) {
  r = r_;
 }
@@ -121,5 +127,9 @@ void mysrand(unsigned short r_) {
 unsigned short myrand(void) {
  return r=((r<<11)+(r<<7)+r)>>1;
 }
+
+int Computer, MaxTime, MaxMoves, TimeInc, sec, i;
+char line[256], command[256];
+int m, nr;
 
 #endif

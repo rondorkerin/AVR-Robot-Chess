@@ -35,3 +35,32 @@ and make sure it can be called through the main module in my AVR code by examini
 9:00 PM
 Okay so I got the engine to work and I'm attempting to refactor it into something with a usable interface. currently everything
 is in a main function and I'm studying the code to move pieces into the desired interface functions.
+
+I found that the main loop is continually polling for xboard compatible engine commands. You can find more info 
+here: http://home.hccnet.nl/h.g.muller/engine-intf.html. What this means is that we need a new function that sends commands
+directly to the engine instead of relying on standard IO. We need to send commands to this function from our other, higher level
+interface functions.
+
+11:29 PM
+SUCCESS! It took a bit of hacking but I figured out how to make a basic control loop that moves player and then AI. I'm only taking into account player VS AI
+game mode right now. There's a little bit of a problem with this interface. It is very hard coded and not object oriented. This means I'll need to keep a separate project
+from the microcontroller code to test the interface. I'll need to really polish the interface using standard IO on my windows machine before I can send it to the microcontroller.
+If it doesn't work flawlessly on the microcontroller, it will be INCREDIBLY difficult to debug. The code is just too confusing to not use a step debugger. 
+
+I'm still defining the interface as I go. For instance, I'll need to get a function to return whether or not a piece was taken. Also, a lot of the code is dependent on "timers"
+which just needs to go away. So I have a lot of refactoring to do. Hopefully this code will become beautiful by the time i finish with it. Also, a lot of the commands are based on
+strings for now. In the future I may need to base them on enumerated values. 
+
+These are the three things I need to return from the player move function
+1.	If The player move took an opponent’s piece
+2.	The player move was valid and the board is updated
+3.	The player’s move was invalid.
+Note that the chess engine already knows where the player moved from. Ideally it should pass in a "move" struct.
+
+These are the things I need to return from the AI move function:
+1.  If the AI took a player's piece
+2.  If the AI resigned
+3.  Where the AI moved
+
+
+
