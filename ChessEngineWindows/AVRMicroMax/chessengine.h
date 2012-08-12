@@ -73,6 +73,7 @@ void InitGame();
 short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n); 
 void CopyBoard(int s);
 int GameStatusResult();
+int CheckForTakenPiece();
 
 /* Global variables visible to engine. Normally they */
 /* would be replaced by the names under which these  */

@@ -79,19 +79,6 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
 	
 		sprintf(outMove,"%c%c%c%c", 'a' + (K & 7), '8' - (K >> 4),
 			   'a' + (L & 7), '8' - (L >> 4));
-	    /*
-		 * 
-		 * 
-		 * 
-		 * 
-		 *  	Note: I need to figure out if I took a piece. The problem is the D function
-		 *    actually moves every time it is searching. So I have to find some way of comparing the board
-		 * 	   states before and after the move. Maybe this can be accomplished with the board pointer. 
-		 * 
-		 * 
-		 * 
-		 */
-		*outTookPieceFlag = 0;
  
 		m = GetTickCount() - Ticks;
 
@@ -109,6 +96,8 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
 		GameHistory[GamePtr++] = PACK_MOVE;
 		CopyBoard(HistPtr = HistPtr + 1 & 1023);
 		
+		*outTookPieceFlag = CheckForTakenPiece();
+		
 		*outGameResult = GameStatusResult();
 	} 
 	return;
@@ -119,7 +108,7 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
  *  precondition: output variables must be zeroed.
  * 
  */ 
-char PlayerMove(char* move, int* outGameResult,int* outTookPieceFlag,int* outUnknownMoveFlag, int* outIllegalMoveFlag)
+char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outUnknownMoveFlag, int* outIllegalMoveFlag)
 {
 	*outGameResult = *outTookPieceFlag = *outUnknownMoveFlag = *outIllegalMoveFlag = 0;
 	
@@ -145,26 +134,14 @@ char PlayerMove(char* move, int* outGameResult,int* outTookPieceFlag,int* outUnk
 		*outIllegalMoveFlag = 1;
 		return;
 	} 
-
+	
     /* legal move, perform it */
 	GameHistory[GamePtr++] = PACK_MOVE;
 	Side ^= 24;
 	CopyBoard(HistPtr = HistPtr + 1 & 1023);
 	
-		/*
-		 * 
-		 * 
-		 * 
-		 * 
-		 *  	Note: I need to figure out if I took a piece. The problem is the D function
-		 *    actually moves every time it is searching. So I have to find some way of comparing the board
-		 * 	   states before and after the move. Maybe this can be accomplished with the board pointer. 
-		 * 
-		 * 
-		 * 
-		 */
-		*outTookPieceFlag = 0;
-	
+	*outTookPieceFlag = CheckForTakenPiece();
+		
 	*outGameResult = GameStatusResult();
 }
 
@@ -210,10 +187,13 @@ void InitGame(int gameType)
 	TimeLeft = MaxTime;
 	MovesLeft = MaxMoves;
 	
+	CopyBoard(0);
+	/*
 	// Reset the board history
 	for (nr = 0; nr < 1024; nr++)
 		for (m = 0; m < STATE; m++)
 			HistoryBoards[nr][m] = 0;
+			 */
 }
 
 short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n)    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
@@ -365,12 +345,37 @@ void CopyBoard(int s)
 }
 
 
+/*
+ *  Checks to see if there was a piece taken in the last turn
+ */ 
+int CheckForTakenPiece()
+{
+	// Count the number of entities in the previous and current move
+	int k, totalPiecesPrevState = 0, totalPiecesCrntState = 0;
+	for (k = 0; k < STATE; k++)
+	{
+		char prev = HistoryBoards[HistPtr-1][k];
+		char crnt = HistoryBoards[HistPtr][k];
+		
+		// for some reason, the engine puts an @ symbol at random places on the map
+		// i think it has to do with the recursive search. just don't count it.
+		if (prev != EMPTY && prev != '@')
+		{
+			totalPiecesPrevState++;
+		}
+		if (crnt != EMPTY && crnt != '@')
+		{
+			totalPiecesCrntState++;
+		}
+	}
+	return (totalPiecesCrntState != totalPiecesPrevState);	
+}
+
 int main(int argc, char **argv)
 {
     signal(SIGINT, SIG_IGN);
     mysrand(time(NULL));        /* make myrand() calls random */
-    printf("tellics say     micro-Max 4.8 (m)\n");
-    printf("tellics say     by H.G. Muller\n");
+    printf("enter a move format letter number letter number\n");
     InitEngine();
     InitGame(PlayerVsAI);
     MaxTime = 10000;            /* 10 sec */

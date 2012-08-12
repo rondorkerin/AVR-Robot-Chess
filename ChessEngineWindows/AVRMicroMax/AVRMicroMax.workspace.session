@@ -1,38 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Session Name="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\Examples\AVRMicroMax\AVRMicroMax.workspace">
+<Session Name="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\ChessEngineWindows\AVRMicroMax\AVRMicroMax.workspace">
   <int Value="1" Name="m_selectedTab"/>
-  <wxString Value="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\Examples\AVRMicroMax\AVRMicroMax.workspace" Name="m_workspaceName"/>
+  <wxString Value="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\ChessEngineWindows\AVRMicroMax\AVRMicroMax.workspace" Name="m_workspaceName"/>
   <TabInfoArray Name="TabInfoArray">
     <TabInfo>
-      <wxString Value="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\Examples\AVRMicroMax\chessengine.h" Name="FileName"/>
-      <int Value="20" Name="FirstVisibleLine"/>
-      <int Value="44" Name="CurrentLine"/>
+      <wxString Value="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\ChessEngineWindows\AVRMicroMax\chessengine.c" Name="FileName"/>
+      <int Value="125" Name="FirstVisibleLine"/>
+      <int Value="149" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
     <TabInfo>
-      <wxString Value="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\Examples\AVRMicroMax\chessengine.c" Name="FileName"/>
-      <int Value="327" Name="FirstVisibleLine"/>
-      <int Value="334" Name="CurrentLine"/>
+      <wxString Value="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\ChessEngineWindows\AVRMicroMax\chessengine.h" Name="FileName"/>
+      <int Value="19" Name="FirstVisibleLine"/>
+      <int Value="36" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
     </TabInfo>
   </TabInfoArray>
   <SerializedObject Name="m_breakpoints">
-    <long Value="1" Name="Count"/>
-    <SerializedObject Name="Breakpoint0">
-      <wxString Value="C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\Examples\AVRMicroMax\chessengine.c" Name="file"/>
-      <int Value="1" Name="lineno"/>
-      <wxString Value="" Name="function_name"/>
-      <wxString Value="" Name="memory_address"/>
-      <int Value="1" Name="bp_type"/>
-      <int Value="0" Name="watchpoint_type"/>
-      <wxString Value="" Name="watchpt_data"/>
-      <CData Name="commandlist"/>
-      <bool Value="0" Name="regex"/>
-      <bool Value="0" Name="is_temp"/>
-      <bool Value="1" Name="is_enabled"/>
-      <int Value="0" Name="ignore_number"/>
-      <wxString Value="" Name="conditions"/>
-      <int Value="0" Name="origin"/>
-    </SerializedObject>
+    <long Value="0" Name="Count"/>
   </SerializedObject>
 </Session>
