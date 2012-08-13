@@ -75,3 +75,16 @@ Basically, I'm stripping down this guy's engine to the bone... it's good to stri
  
  The alternative to returning the tookPiece flags is checking it manually and keeping my own copy of the board outside of the interface. That is a terrible idea as
  there is already a copy of the board in memory.
+ 
+ 8/12/2012
+7:47 PM
+I just spent two hours figuring out how to check for a taken piece. I realized the best way was finding the difference in number of pieces on the board between turns. It doesn't
+require knowing much about the move that was taken and thus it can be generalized for both player and AI move. It is simply a linear search in the space of states which amounts to 
+little runtime. 
+
+Now I'm going to clean up the rest of the interface to be worthy of AVR. I'm going to get rid of all headers associated with windows and fix the maximum search depth to lower than 30.
+I'll also remove anything about a "maximum game length". This should clean everything up very nicely, I just wanted to save it for last. Also, I need to decrease the size of the game board history
+and this might require some reworking. I might need to make the game board history a circular buffer, which would be cool to implement. I sure am learning a lot. 
+
+8:27 PM
+Wow, there was a LOT to clean up. I'm still using sprintf from stdio, hopefully I can use that in the AVR. Other than that things are looking about done. 

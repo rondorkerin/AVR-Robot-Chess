@@ -1,55 +1,26 @@
-/***************************************************************************/
-/*                               micro-Max,                                */
-/* A chess program smaller than 2KB (of non-blank source), by H.G. Muller  */
-/* Port to Atmel ATMega and AVR GCC, by Andre Adrian                       */
-/***************************************************************************/
-/* version 4.8 (~1900 characters) features:                                */
-/* - recursive negamax search                                              */
-/* - all-capture quiescence search with MVV/LVA priority                   */
-/* - (internal) iterative deepening                                        */
-/* - best-move-first 'sorting'                                             */
-/* - a hash table storing score and best move                              */
-/* - futility pruning                                                      */
-/* - king safety through magnetic frozen king                              */
-/* - null-move pruning                                                     */
-/* - Late-move reductions                                                  */
-/* - full FIDE rules (expt minor promotion) and move-legality checking     */
-/* - keep hash + rep-draw detect                                           */
-/* - end-game Pawn-push bonus, new piece values, gradual promotion         */
-
-/* Rehash sacrificed, simpler retrieval. Some characters squeezed out.     */
-/* No hash-table clear, single-call move-legality checking based on K==I   */
-
-/* fused to generic Winboard driver */
-
-/* 26nov2008 no hash table */
-/* 29nov2008 pseudo random generator  */
-
 #include "chessengine.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <time.h>
-#include <windows.h>
+
 
 /*
  *  Cause the AI to think a move for the current position
  *  and execute move
  *  
- *  returns a string with the results of the move:
- *  the first character is a boolean signifying
- *  whether the AI took a player's piece.
- *  The second character is a boolean signifying
- *  whether
+ *  output param outGameResult - enum for result of the move (stalemate checkmate)
+ *  output param outTookPieceFlag - bit specifying whether a piece was taken
+ *  output param outMove - algebraic format move the AI made
  */ 
 void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
 {
 	*outGameResult = *outTookPieceFlag = 0;
 	
+	// count the number of pieces for checking if a piece has been taken
+	int prevPieceCount = GetPieceCount();
+	
 	// not sure what these variables even are but they were set at the beginning of sendcommand.
 	Z = 0;
 	T = 0x3F;
+	
 	/* think up & do move, measure time used  */
 	/* it is the responsibility of the engine */
 	/* to control its search time based on    */
@@ -59,45 +30,19 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
 	/* If MovesLeft<0 all remaining moves of  */
 	/* the game have to be done in this time. */
 	/* If MaxMoves=1 any leftover time is lost */
-	Ticks = GetTickCount();
-	m = MovesLeft <= 0 ? 40 : MovesLeft;
-	tlim = 0.6 * (TimeLeft + (m - 1) * TimeInc) / (m + 7);
 	PromPiece = 'q';
 	N = 0;
 	K = I;
 	if (D(Side, -I, I, Q, O, 8, 3) == I) {
+		
+		// switch sides
 		Side ^= 24;
-		/*
-		if (UnderProm >= 0 && UnderProm != L) {
-			printf("tellics I hate under-promotions!\n");
-			printf("resign\n");
-			Computer = EMPTY;
-			return;
-		} else
-			UnderProm = -1;
-		*/
 	
+		// send move result to output variable
 		sprintf(outMove,"%c%c%c%c", 'a' + (K & 7), '8' - (K >> 4),
 			   'a' + (L & 7), '8' - (L >> 4));
- 
-		m = GetTickCount() - Ticks;
-
-		/* time-control accounting */
-		TimeLeft -= m;
-		TimeLeft += TimeInc;
-		if (--MovesLeft == 0) {
-			MovesLeft = MaxMoves;
-			if (MaxMoves == 1)
-				TimeLeft = MaxTime;
-			else
-				TimeLeft += MaxTime;
-		}
-
-		GameHistory[GamePtr++] = PACK_MOVE;
-		CopyBoard(HistPtr = HistPtr + 1 & 1023);
 		
-		*outTookPieceFlag = CheckForTakenPiece();
-		
+		*outTookPieceFlag = GetPieceCount() == prevPieceCount ? 0 : 1;
 		*outGameResult = GameStatusResult();
 	} 
 	return;
@@ -105,12 +50,18 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
 
 
 /*
- *  precondition: output variables must be zeroed.
- * 
+ *  Executes a move specified in algebraic format ex: a2a4
+ *  
+ *  output param outGameResult - enum for result of the move (stalemate checkmate)
+ *  output param outTookPieceFlag - bit specifying whether a piece was taken
+ *  output param outMove - algebraic format move the AI made
  */ 
-char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outUnknownMoveFlag, int* outIllegalMoveFlag)
+char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag)
 {
-	*outGameResult = *outTookPieceFlag = *outUnknownMoveFlag = *outIllegalMoveFlag = 0;
+	*outGameResult = *outTookPieceFlag = *outIllegalMoveFlag = 0;
+	
+	// count the number of pieces for checking if a piece has been taken
+	int prevPieceCount = GetPieceCount();
 	
 	// not sure what these variables even are but they were set at the beginning of sendcommand.
 	Z = 0;
@@ -124,7 +75,7 @@ char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outU
 	L = move[2] - 16 * move[3] + 799;
 	
 	/* doesn't have move syntax */
-	if ((*outUnknownMoveFlag = m) == 1)
+	if (*outIllegalMoveFlag = m)
 	{
 		return;
 	}
@@ -135,13 +86,11 @@ char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outU
 		return;
 	} 
 	
-    /* legal move, perform it */
-	GameHistory[GamePtr++] = PACK_MOVE;
+	// switch sides
 	Side ^= 24;
-	CopyBoard(HistPtr = HistPtr + 1 & 1023);
 	
-	*outTookPieceFlag = CheckForTakenPiece();
-		
+	// set output flags
+	*outTookPieceFlag = GetPieceCount() == prevPieceCount ? 0 : 1;
 	*outGameResult = GameStatusResult();
 }
 
@@ -179,23 +128,14 @@ void InitGame(int gameType)
 
     Q = 0;
     O = S;
-    Fifty = R = 0;
-    UnderProm = -1;
-	GamePtr = 0;
-	HistPtr = 0;
+    R = 0;
 	Computer = BLACK;
-	TimeLeft = MaxTime;
-	MovesLeft = MaxMoves;
 	
-	CopyBoard(0);
-	/*
-	// Reset the board history
-	for (nr = 0; nr < 1024; nr++)
-		for (m = 0; m < STATE; m++)
-			HistoryBoards[nr][m] = 0;
-			 */
 }
 
+/**
+ *  Recursive Minimax Search
+ */ 
 short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n)    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
 {                       
  short m,v,i,P,V,s;
@@ -258,10 +198,10 @@ short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,
        {if(v+I&&x==K&y==L)                     /*   if move found          */
         {Q=-e-i;O=F;
          R+=i>>7;                              /*** total captd material ***/
-         if((b[y]&7)!=p && PromPiece == 'n') UnderProm = y;
-         if((b[y]&7)!=p) {printf("tellics kibitz promotion\n");fflush(stdout);};
-         Fifty = t|p<3?0:Fifty+1;
-                --Z;return l;                  /*   & not in check, signal */
+		 //if((b[y]&7)!=p && PromPiece == 'n') UnderProm = y;
+         //if((b[y]&7)!=p) {printf("tellics kibitz promotion\n");fflush(stdout);};
+               --Z;return l;                  /*   & not in check, signal */
+				
         }
         v=m;                                   /* (prevent fail-lows on    */
        }                                       /*   K-capt. replies)       */
@@ -278,12 +218,7 @@ short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,
       else F=y;                                /* enable e.p.              */
      }W(!t);                                   /* if not capt. continue ray*/
   }}}W((x=x+9&~M)-B);                          /* next sqr. of board, wrap */
-C:m=m+I|P==I?m:0;        /*** check test thru NM  best loses K: (stale)mate*/
-if(z==8&Post){
-  printf("%2d ",d-2);
-  printf("%6d ",m);
-  printf("%8d %10d %c%c%c%c\n",(GetTickCount()-Ticks)/10,N,
-     'a'+(X&7),'8'-(X>>4),'a'+(Y&7),'8'-(Y>>4&7)),fflush(stdout);}
+C:m=m+I|P==I?m:0;        /*** check test thru NM  best loses K: (stale)mate*/	   
  }                                             /*    encoded in X S,8 bits */
 if(z==S+1)K=X,L=Y&~M;
  --Z;return m+=m<e;                            /* delayed-loss bonus       */
@@ -297,20 +232,6 @@ int GameStatusResult(int side)
 {
     int i, j, k, cnt = 0;
 
-    /* search last 50 states with this stm for third repeat */
-    for (j = 2; j <= 100; j += 2) {
-        for (k = 0; k < STATE; k++)
-            if (HistoryBoards[HistPtr][k] !=
-                HistoryBoards[HistPtr - j & 1023][k]) {
-                goto differs;
-            }
-        /* is the same, count it */
-        if (++cnt == 2) {       /* third repeat */
-            printf("1/2-1/2 {Draw by repetition}\n");
-            return DrawByRepetition;
-        }
-      differs:;
-	}
     K = I;
     cnt = D(side, -I, I, Q, O, side + 1, 3);
     if (cnt == 0 && K == 0 && L == 0) {
@@ -325,70 +246,43 @@ int GameStatusResult(int side)
             //printf("1-0 {White mates}\n");
 			return WhiteMates;
     }
-    if (Fifty >= 100) {
-        //printf("1/2-1/2 {Draw by fifty move rule}\n");
-        return DrawByFiftyMoveRule;
-    }
+
     return InPlay;
 }
-
-void CopyBoard(int s)
-{
-    int j, k, cnt = 0;
-
-    /* copy game representation of engine to HistoryBoard */
-    /* don't forget castling rights and e.p. state!       */
-    for (j = 0; j < 64; j++)
-        HistoryBoards[s][j] = b[j + (j & 0x38)];        /* board squares  */
-    if (!(O & M))
-        HistoryBoards[s][O + (O & 7) >> 1] |= 64;       /* mark ep square */
-}
-
 
 /*
  *  Checks to see if there was a piece taken in the last turn
  */ 
-int CheckForTakenPiece()
+int GetPieceCount()
 {
-	// Count the number of entities in the previous and current move
-	int k, totalPiecesPrevState = 0, totalPiecesCrntState = 0;
-	for (k = 0; k < STATE; k++)
+	int j, count = 0;
+	
+	// loop through all the board squares and count pieces
+	for (j = 0; j < 64; j++)
 	{
-		char prev = HistoryBoards[HistPtr-1][k];
-		char crnt = HistoryBoards[HistPtr][k];
-		
-		// for some reason, the engine puts an @ symbol at random places on the map
-		// i think it has to do with the recursive search. just don't count it.
-		if (prev != EMPTY && prev != '@')
-		{
-			totalPiecesPrevState++;
-		}
-		if (crnt != EMPTY && crnt != '@')
-		{
-			totalPiecesCrntState++;
-		}
+		char piece = b[j + (j & 0x38)];        /* board squares  */	
+		if (piece != EMPTY && piece != '@')
+			count++;
 	}
-	return (totalPiecesCrntState != totalPiecesPrevState);	
+	
+	return count;
 }
 
 int main(int argc, char **argv)
 {
-    signal(SIGINT, SIG_IGN);
-    mysrand(time(NULL));        /* make myrand() calls random */
+
     printf("enter a move format letter number letter number\n");
     InitEngine();
     InitGame(PlayerVsAI);
-    MaxTime = 10000;            /* 10 sec */
-    MaxDepth = 30;              /* maximum depth of your search */
 
-	int gameResult = 0, tookPieceFlag = 0, unknownMoveFlag = 0, illegalMoveFlag = 0;
+	int gameResult = 0, tookPieceFlag = 0,illegalMoveFlag = 0;
 	char resultMove[4];
 
     for (;;) {
 		char cmd[100];
 		scanf("%s", cmd);
-		PlayerMove(cmd, &gameResult, &tookPieceFlag, &unknownMoveFlag, &illegalMoveFlag);
-		printf("r)%d t)%d u)%d i)%d\n", gameResult, tookPieceFlag, unknownMoveFlag, illegalMoveFlag);
+		PlayerMove(cmd, &gameResult, &tookPieceFlag, &illegalMoveFlag);
+		printf("r)%d t)%d i)%d\n", gameResult, tookPieceFlag, illegalMoveFlag);
 		if (illegalMoveFlag)
 		{
 			printf("illegal move.\n");
@@ -399,40 +293,3 @@ int main(int argc, char **argv)
 	}
 	
 }
-
-
-/* Generic main() for Winboard-compatible engine     */
-/* (Inspired by TSCP)                                */
-/* Author: H.G. Muller                               */
-
-/* The engine is invoked through the following       */
-/* subroutines, that can draw on the global vaiables */
-/* that are maintained by the interface:             */
-/* Side         side to move                         */
-/* Move         move input to or output from engine  */
-/* PromPiece    requested piece on promotion move    */
-/* TimeLeft     ms left to next time control         */
-/* MovesLeft    nr of moves to play within TimeLeft  */
-/* MaxDepth     search-depth limit in ply            */
-/* Post         boolean to invite engine babble      */
-
-/* InitEngine() progran start-up initialization      */
-/* InitGame()   initialization to start new game     */
-/*              (sets Side, but not time control)    */
-/* Think()      think up move from current position  */
-/*              (leaves move in Move, can be invalid */
-/*               if position is check- or stalemate) */
-/* DoMove()     perform the move in Move             */
-/*              (togglese Side)                      */
-/* ReadMove()   convert input move to engine format  */
-/* PrintMove()  print Move on standard output        */
-/* Legal()      check Move for legality              */
-/* ClearBoard() make board empty                     */
-/* PutPiece()   put a piece on the board             */
-
-/* define this to the codes used in your engine,     */
-/* if the engine hasn't defined it already.          */
-
-
-
-

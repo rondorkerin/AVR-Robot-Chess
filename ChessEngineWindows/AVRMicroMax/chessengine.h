@@ -6,35 +6,20 @@
 /* A chess program smaller than 2KB (of non-blank source), by H.G. Muller  */
 /* Port to Atmel ATMega and AVR GCC, by Andre Adrian                       */
 /***************************************************************************/
-/* version 4.8 (~1900 characters) features:                                */
-/* - recursive negamax search                                              */
-/* - all-capture quiescence search with MVV/LVA priority                   */
-/* - (internal) iterative deepening                                        */
-/* - best-move-first 'sorting'                                             */
-/* - a hash table storing score and best move                              */
-/* - futility pruning                                                      */
-/* - king safety through magnetic frozen king                              */
-/* - null-move pruning                                                     */
-/* - Late-move reductions                                                  */
-/* - full FIDE rules (expt minor promotion) and move-legality checking     */
-/* - keep hash + rep-draw detect                                           */
-/* - end-game Pawn-push bonus, new piece values, gradual promotion         */
 
-/* Rehash sacrificed, simpler retrieval. Some characters squeezed out.     */
-/* No hash-table clear, single-call move-legality checking based on K==I   */
-
-/* fused to generic Winboard driver */
-
-/* 26nov2008 no hash table */
-/* 29nov2008 pseudo random generator  */
+// Public functions
+void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove);
+char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag);
+void NewGame();
+void InitEngine();
+void InitGame();
 
 int StartKey;
 
 #define EMPTY 0
 #define WHITE 8
 #define BLACK 16
-
-#define STATE 64
+#define MAXDEPTH 1
 
 /* make unique integer from engine move representation */
 #define PACK_MOVE 256*K + L;
@@ -50,20 +35,10 @@ enum GameMode{
 
 enum GameResult { 
 	InPlay = 0,
-	DrawByRepetition,
 	StaleMate,
 	BlackMates,
-	WhiteMates,
-	DrawByFiftyMoveRule
+	WhiteMates
 };
-
-// Public functions
-void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove);
-char PlayerMove(char* move, int* outGameResult,int* outTookPieceFlag,int* outUnknownMoveFlag, int* outIllegalMoveFlag);
-void NewGame();
-void InitEngine();
-void InitGame();
-
 
 // private functions
 /* (q,l)=window, e=current eval. score
@@ -73,7 +48,7 @@ void InitGame();
 short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n); 
 void CopyBoard(int s);
 int GameStatusResult();
-int CheckForTakenPiece();
+int GetPieceCount();
 
 /* Global variables visible to engine. Normally they */
 /* would be replaced by the names under which these  */
@@ -83,19 +58,6 @@ int CheckForTakenPiece();
 int Side;
 int Move;
 int PromPiece;
-int Result;
-int TimeLeft;
-int MovesLeft;
-int MaxDepth;
-int Post;
-int Fifty;
-int UnderProm;
-
-int Ticks, tlim;
-
-int GameHistory[1024];
-char HistoryBoards[1024][STATE];
-int GamePtr, HistPtr;
 
 #define W while
 #define M 0x88
@@ -114,9 +76,6 @@ b[129],                                /* board, center piece table, dummy */
 
 n[]=".?inkbrq?I?NKBRQ",            /* piece symbols on printout, Pawn is i */
 Z;                                                  /* Z=recursion counter */
-
-/* 16bit pseudo random generator by Andre Adrian */
-#define MYRAND_MAX 65535
 
 unsigned short r = 1;                     /* pseudo random generator seed */
 
