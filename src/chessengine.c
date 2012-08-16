@@ -1,107 +1,143 @@
-/***************************************************************************/
-/*                               micro-Max,                                */
-/* A chess program smaller than 2KB (of non-blank source), by H.G. Muller  */
-/* Port to Atmel ATMega and AVR GCC, by Andre Adrian                       */
-/***************************************************************************/
-/* version 4.8 (~1900 characters) features:                                */
-/* - recursive negamax search                                              */
-/* - all-capture quiescence search with MVV/LVA priority                   */
-/* - (internal) iterative deepening                                        */
-/* - best-move-first 'sorting'                                             */
-/* - a hash table storing score and best move                              */
-/* - futility pruning                                                      */
-/* - king safety through magnetic frozen king                              */
-/* - null-move pruning                                                     */
-/* - Late-move reductions                                                  */
-/* - full FIDE rules (expt minor promotion) and move-legality checking     */
-/* - keep hash + rep-draw detect                                           */
-/* - end-game Pawn-push bonus, new piece values, gradual promotion         */
+#include "chessengine.h"
+#include "chessengine_p.h"
 
-/* Rehash sacrificed, simpler retrieval. Some characters squeezed out.     */
-/* No hash-table clear, single-call move-legality checking based on K==I   */
+/*
+ *  Cause the AI to think a move for the current position
+ *  and execute move
+ *  
+ *  output param outGameResult - enum for result of the move (stalemate checkmate)
+ *  output param outTookPieceFlag - bit specifying whether a piece was taken
+ *  output param outMove - algebraic format move the AI made
+ */ 
+void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
+{
+	*outGameResult = *outTookPieceFlag = 0;
+	
+	// count the number of pieces for checking if a piece has been taken
+	int prevPieceCount = GetPieceCount();
+	
+	// not sure what these variables even are but they were set at the beginning of sendcommand.
+	Z = 0;
+	T = 0x3F;
+	
+	/* think up & do move, measure time used  */
+	/* it is the responsibility of the engine */
+	/* to control its search time based on    */
+	/* MovesLeft, TimeLeft, MaxMoves, TimeInc */
+	/* Next 'MovesLeft' moves have to be done */
+	/* within TimeLeft+(MovesLeft-1)*TimeInc  */
+	/* If MovesLeft<0 all remaining moves of  */
+	/* the game have to be done in this time. */
+	/* If MaxMoves=1 any leftover time is lost */
+	PromPiece = 'q';
+	N = 0;
+	K = I;
+	if (D(Side, -I, I, Q, O, 8, 3) == I) {
+		
+		// switch sides
+		Side ^= 24;
+	
+		// send move result to output variable
+		outMove[0] = 'a' + (K & 7);
+		outMove[1] =  '8' - (K >> 4);
+		outMove[2] = 'a' + (L & 7);
+		outMove[3] = '8' - (L >> 4);
+		
+		*outTookPieceFlag = GetPieceCount() == prevPieceCount ? 0 : 1;
+		*outGameResult = GameStatusResult();
+	} 
+	return;
+} 
 
-/* fused to generic Winboard driver */
 
-/* 26nov2008 no hash table */
-/* 29nov2008 pseudo random generator  */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <time.h>
-#include <windows.h>
-
-int StartKey;
-
-#define EMPTY 0
-#define WHITE 8
-#define BLACK 16
-
-#define STATE 64
-
-/* make unique integer from engine move representation */
-#define PACK_MOVE 256*K + L;
-
-/* convert intger argument back to engine move representation */
-#define UNPACK_MOVE(A) K = (A)>>8 & 255; L = (A) & 255;
-
-/* Global variables visible to engine. Normally they */
-/* would be replaced by the names under which these  */
-/* are known to your engine, so that they can be     */
-/* manipulated directly by the interface.            */
-
-int Side;
-int Move;
-int PromPiece;
-int Result;
-int TimeLeft;
-int MovesLeft;
-int MaxDepth;
-int Post;
-int Fifty;
-int UnderProm;
-
-int Ticks, tlim;
-
-int GameHistory[1024];
-char HistoryBoards[1024][STATE];
-int GamePtr, HistPtr;
-
-#define W while
-#define M 0x88
-#define S 128
-#define I 8000
-
-long N, T;                  /* N=evaluated positions+S, T=recursion limit */
-short Q,O,K,R;
-
-char L,
-w[]={0,2,2,7,-1,8,12,23},                      /* relative piece values    */
-o[]={-16,-15,-17,0,1,16,0,1,16,15,17,0,14,18,31,33,0, /* step-vector lists */
-     7,-1,11,6,8,3,6,                          /* 1st dir. in o[] per piece*/
-     6,3,5,7,4,5,3,6},                         /* initial piece setup      */
-b[129],                                /* board, center piece table, dummy */
-
-n[]=".?inkbrq?I?NKBRQ",            /* piece symbols on printout, Pawn is i */
-Z;                                                  /* Z=recursion counter */
-
-/* 16bit pseudo random generator by Andre Adrian */
-#define MYRAND_MAX 65535
-
-unsigned short r = 1;                     /* pseudo random generator seed */
-
-void mysrand(unsigned short r_) {
- r = r_;
+/*
+ *  Executes a move specified in algebraic format ex: a2a4
+ *  
+ *  output param outGameResult - enum for result of the move (stalemate checkmate)
+ *  output param outTookPieceFlag - bit specifying whether a piece was taken
+ *  output param outMove - algebraic format move the AI made
+ */ 
+char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag)
+{
+	*outGameResult = *outTookPieceFlag = *outIllegalMoveFlag = 0;
+	
+	// count the number of pieces for checking if a piece has been taken
+	int prevPieceCount = GetPieceCount();
+	
+	// not sure what these variables even are but they were set at the beginning of sendcommand.
+	Z = 0;
+	T = 0x3F;
+	
+	Side = WHITE; // hardcode player to white side
+	/* move not recognized, assume input move */
+	m = move[0] < 'a' | move[0] > 'h' | move[1] < '1' | move[1] > '8' |
+		move[2] < 'a' | move[2] > 'h' | move[3] < '1' | move[3] > '8';	
+	K = move[0] - 16 * move[1] + 799;
+	L = move[2] - 16 * move[3] + 799;
+	
+	/* doesn't have move syntax */
+	if (*outIllegalMoveFlag = m)
+	{
+		return;
+	}
+	
+	if (D(Side, -I, I, Q, O, 8, 3) != I) {
+		/* did have move syntax, but illegal move */
+		*outIllegalMoveFlag = 1;
+		return;
+	} 
+	
+	// switch sides
+	Side ^= 24;
+	
+	// set output flags
+	*outTookPieceFlag = GetPieceCount() == prevPieceCount ? 0 : 1;
+	*outGameResult = GameStatusResult();
 }
 
-unsigned short myrand(void) {
- return r=((r<<11)+(r<<7)+r)>>1;
+
+/*
+ * Start the engine
+ */
+void InitEngine()
+{
+    int j;
+
+    K = 8;
+    W(K--) {
+        L = 8;
+        W(L--) b[16 * L + K + 8] = (K - 4) * (K - 4) + (L - 3.5) * (L - 3.5);   /* center-pts table   */
+    }                           /*(in unused half b[]) */
 }
 
-short D(k,q,l,e,E,z,n)          /* recursive minimax search, k=moving side */
-short q,l,e;                        /* (q,l)=window, e=current eval. score */
-unsigned char k,E,z,n;    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
+/*
+ * Start a new game 
+ */ 
+void InitGame(int gameType)
+{
+    int i, j;
+
+    for (i = 0; i < 128; i++)
+        b[i & ~M] = 0;
+    K = 8;
+    W(K--) {
+        b[K] = (b[K + 112] = o[K + 24] + 8) + 8;
+        b[K + 16] = 18;
+        b[K + 96] = 9;          /* initial board setup */
+    }                           /*(in unused half b[]) */
+    Side = WHITE;
+
+    Q = 0;
+    O = S;
+    R = 0;
+	Computer = BLACK;
+	
+}
+
+/**
+ *  Recursive Minimax Search
+ */ 
+short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n)    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
 {                       
  short m,v,i,P,V,s;
  unsigned char t,p,u,x,y,X,Y,H,B,j,d,h,F,G,C;
@@ -163,10 +199,10 @@ unsigned char k,E,z,n;    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
        {if(v+I&&x==K&y==L)                     /*   if move found          */
         {Q=-e-i;O=F;
          R+=i>>7;                              /*** total captd material ***/
-         if((b[y]&7)!=p && PromPiece == 'n') UnderProm = y;
-         if((b[y]&7)!=p) {printf("tellics kibitz promotion\n");fflush(stdout);};
-         Fifty = t|p<3?0:Fifty+1;
-                --Z;return l;                  /*   & not in check, signal */
+		 //if((b[y]&7)!=p && PromPiece == 'n') UnderProm = y;
+         //if((b[y]&7)!=p) {printf("tellics kibitz promotion\n");fflush(stdout);};
+               --Z;return l;                  /*   & not in check, signal */
+				
         }
         v=m;                                   /* (prevent fail-lows on    */
        }                                       /*   K-capt. replies)       */
@@ -183,423 +219,70 @@ unsigned char k,E,z,n;    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
       else F=y;                                /* enable e.p.              */
      }W(!t);                                   /* if not capt. continue ray*/
   }}}W((x=x+9&~M)-B);                          /* next sqr. of board, wrap */
-C:m=m+I|P==I?m:0;        /*** check test thru NM  best loses K: (stale)mate*/
-if(z==8&Post){
-  printf("%2d ",d-2);
-  printf("%6d ",m);
-  printf("%8d %10d %c%c%c%c\n",(GetTickCount()-Ticks)/10,N,
-     'a'+(X&7),'8'-(X>>4),'a'+(Y&7),'8'-(Y>>4&7)),fflush(stdout);}
+C:m=m+I|P==I?m:0;        /*** check test thru NM  best loses K: (stale)mate*/	   
  }                                             /*    encoded in X S,8 bits */
 if(z==S+1)K=X,L=Y&~M;
  --Z;return m+=m<e;                            /* delayed-loss bonus       */
 }
 
-/* Generic main() for Winboard-compatible engine     */
-/* (Inspired by TSCP)                                */
-/* Author: H.G. Muller                               */
-
-/* The engine is invoked through the following       */
-/* subroutines, that can draw on the global vaiables */
-/* that are maintained by the interface:             */
-/* Side         side to move                         */
-/* Move         move input to or output from engine  */
-/* PromPiece    requested piece on promotion move    */
-/* TimeLeft     ms left to next time control         */
-/* MovesLeft    nr of moves to play within TimeLeft  */
-/* MaxDepth     search-depth limit in ply            */
-/* Post         boolean to invite engine babble      */
-
-/* InitEngine() progran start-up initialization      */
-/* InitGame()   initialization to start new game     */
-/*              (sets Side, but not time control)    */
-/* Think()      think up move from current position  */
-/*              (leaves move in Move, can be invalid */
-/*               if position is check- or stalemate) */
-/* DoMove()     perform the move in Move             */
-/*              (togglese Side)                      */
-/* ReadMove()   convert input move to engine format  */
-/* PrintMove()  print Move on standard output        */
-/* Legal()      check Move for legality              */
-/* ClearBoard() make board empty                     */
-/* PutPiece()   put a piece on the board             */
-
-/* define this to the codes used in your engine,     */
-/* if the engine hasn't defined it already.          */
-
-int PrintResult(int s)
+/*
+ * returns the result of the present move (whether someone won or lost)
+ * return value based on the GameResult enum
+ */  
+int GameStatusResult(int side)
 {
     int i, j, k, cnt = 0;
 
-    /* search last 50 states with this stm for third repeat */
-    for (j = 2; j <= 100; j += 2) {
-        for (k = 0; k < STATE; k++)
-            if (HistoryBoards[HistPtr][k] !=
-                HistoryBoards[HistPtr - j & 1023][k]) {
-                goto differs;
-            }
-        /* is the same, count it */
-        if (++cnt == 2) {       /* third repeat */
-            printf("1/2-1/2 {Draw by repetition}\n");
-            return 1;
-        }
-      differs:;
-    }
     K = I;
-    cnt = D(s, -I, I, Q, O, S + 1, 3);
+    cnt = D(side, -I, I, Q, O, side + 1, 3);
     if (cnt == 0 && K == 0 && L == 0) {
-        printf("1/2-1/2 {Stalemate}\n");
-        return 2;
+        //printf("1/2-1/2 {Stalemate}\n");
+        return StaleMate;
     }
     if (cnt == -I + 1) {
-        if (s == WHITE)
-            printf("0-1 {Black mates}\n");
+        if (side == WHITE)
+			return BlackMates;
+            //printf("0-1 {Black mates}\n");
         else
-            printf("1-0 {White mates}\n");
-        return 3;
+            //printf("1-0 {White mates}\n");
+			return WhiteMates;
     }
-    if (Fifty >= 100) {
-        printf("1/2-1/2 {Draw by fifty move rule}\n");
-        return 4;
-    }
-    return 0;
+
+    return InPlay;
 }
 
-
-InitEngine()
+/*
+ *  Checks to see if there was a piece taken in the last turn
+ */ 
+int GetPieceCount()
 {
-    int j;
-
-    K = 8;
-    W(K--) {
-        L = 8;
-        W(L--) b[16 * L + K + 8] = (K - 4) * (K - 4) + (L - 3.5) * (L - 3.5);   /* center-pts table   */
-    }                           /*(in unused half b[]) */
+	int j, count = 0;
+	
+	// loop through all the board squares and count pieces
+	for (j = 0; j < 64; j++)
+	{
+		char piece = b[j + (j & 0x38)];        /* board squares  */	
+		if (piece != EMPTY && piece != '@')
+			count++;
+	}
+	
+	return count;
 }
 
-InitGame()
+
+/**
+ * Seed random number generator
+ */ 
+void mysrand(unsigned short r_)
 {
-    int i, j;
-
-    for (i = 0; i < 128; i++)
-        b[i & ~M] = 0;
-    K = 8;
-    W(K--) {
-        b[K] = (b[K + 112] = o[K + 24] + 8) + 8;
-        b[K + 16] = 18;
-        b[K + 96] = 9;          /* initial board setup */
-    }                           /*(in unused half b[]) */
-    Side = WHITE;
-    Q = 0;
-    O = S;
-    Fifty = R = 0;
-    UnderProm = -1;
+	r = r_;
 }
 
-void CopyBoard(int s)
+
+/**
+ * Get value from random number generator
+ */ 
+unsigned short myrand(void) 
 {
-    int j, k, cnt = 0;
-
-    /* copy game representation of engine to HistoryBoard */
-    /* don't forget castling rights and e.p. state!       */
-    for (j = 0; j < 64; j++)
-        HistoryBoards[s][j] = b[j + (j & 0x38)];        /* board squares  */
-    if (!(O & M))
-        HistoryBoards[s][O + (O & 7) >> 1] |= 64;       /* mark ep square */
+	return r=((r<<11)+(r<<7)+r)>>1;
 }
-
-int main(int argc, char **argv)
-{
-    int Computer, MaxTime, MaxMoves, TimeInc, sec, i;
-    char line[256], command[256];
-    int m, nr;
-
-    signal(SIGINT, SIG_IGN);
-    mysrand(time(NULL));        /* make myrand() calls random */
-    printf("tellics say     micro-Max 4.8 (m)\n");
-    printf("tellics say     by H.G. Muller\n");
-    InitEngine();
-    InitGame();
-    Computer = EMPTY;
-    MaxTime = 10000;            /* 10 sec */
-    MaxDepth = 30;              /* maximum depth of your search */
-
-    for (;;) {
-        fflush(stdout);
-        Z = 0;
-        T = 0x3F;
-        if (Side == Computer) {
-            /* think up & do move, measure time used  */
-            /* it is the responsibility of the engine */
-            /* to control its search time based on    */
-            /* MovesLeft, TimeLeft, MaxMoves, TimeInc */
-            /* Next 'MovesLeft' moves have to be done */
-            /* within TimeLeft+(MovesLeft-1)*TimeInc  */
-            /* If MovesLeft<0 all remaining moves of  */
-            /* the game have to be done in this time. */
-            /* If MaxMoves=1 any leftover time is lost */
-            Ticks = GetTickCount();
-            m = MovesLeft <= 0 ? 40 : MovesLeft;
-            tlim = 0.6 * (TimeLeft + (m - 1) * TimeInc) / (m + 7);
-            PromPiece = 'q';
-            N = 0;
-            K = I;
-            if (D(Side, -I, I, Q, O, 8, 3) == I) {
-                Side ^= 24;
-                if (UnderProm >= 0 && UnderProm != L) {
-                    printf("tellics I hate under-promotions!\n");
-                    printf("resign\n");
-                    Computer = EMPTY;
-                    continue;
-                } else
-                    UnderProm = -1;
-                printf("move ");
-                printf("%c%c%c%c", 'a' + (K & 7), '8' - (K >> 4),
-                       'a' + (L & 7), '8' - (L >> 4));
-                printf("\n");
-                m = GetTickCount() - Ticks;
-
-                /* time-control accounting */
-                TimeLeft -= m;
-                TimeLeft += TimeInc;
-                if (--MovesLeft == 0) {
-                    MovesLeft = MaxMoves;
-                    if (MaxMoves == 1)
-                        TimeLeft = MaxTime;
-                    else
-                        TimeLeft += MaxTime;
-                }
-
-                GameHistory[GamePtr++] = PACK_MOVE;
-                CopyBoard(HistPtr = HistPtr + 1 & 1023);
-                if (PrintResult(Side))
-                    Computer = EMPTY;
-            } else {
-                if (!PrintResult(Side))
-                    printf("resign\n");
-                Computer = EMPTY;
-            }
-            continue;
-        }
-        if (!fgets(line, 256, stdin))
-            return;
-        if (line[0] == '\n')
-            continue;
-        sscanf(line, "%s", command);
-        if (!strcmp(command, "xboard"))
-            continue;
-        if (!strcmp(command, "new")) {
-            /* start new game */
-            InitGame();
-            GamePtr = 0;
-            HistPtr = 0;
-            Computer = BLACK;
-            TimeLeft = MaxTime;
-            MovesLeft = MaxMoves;
-            for (nr = 0; nr < 1024; nr++)
-                for (m = 0; m < STATE; m++)
-                    HistoryBoards[nr][m] = 0;
-            continue;
-        }
-        if (!strcmp(command, "quit"))
-            /* exit engine */
-            return;
-        if (!strcmp(command, "force")) {
-            /* computer plays neither */
-            Computer = EMPTY;
-            continue;
-        }
-        if (!strcmp(command, "white")) {
-            /* set white to move in current position */
-            Side = WHITE;
-            Computer = BLACK;
-            continue;
-        }
-        if (!strcmp(command, "black")) {
-            /* set blck to move in current position */
-            Side = BLACK;
-            Computer = WHITE;
-            continue;
-        }
-        if (!strcmp(command, "st")) {
-            /* move-on-the-bell mode     */
-            /* indicated by MaxMoves = 1 */
-            sscanf(line, "st %d", &MaxTime);
-            MovesLeft = MaxMoves = 1;
-            TimeLeft = MaxTime *= 1000;
-            TimeInc = 0;
-            continue;
-        }
-        if (!strcmp(command, "sd")) {
-            /* set depth limit (remains in force */
-            /* until next 'sd n' command)        */
-            sscanf(line, "sd %d", &MaxDepth);
-            MaxDepth += 2;      /* QS depth */
-            continue;
-        }
-        if (!strcmp(command, "level")) {
-            /* normal or blitz time control */
-            sec = 0;
-            if (sscanf(line, "level %d %d %d",
-                       &MaxMoves, &MaxTime, &TimeInc) != 3 &&
-                sscanf(line, "level %d %d:%d %d",
-                       &MaxMoves, &MaxTime, &sec, &TimeInc) != 4)
-                continue;
-            MovesLeft = MaxMoves;
-            TimeLeft = MaxTime = 60000 * MaxTime + 1000 * sec;
-            TimeInc *= 1000;
-            continue;
-        }
-        if (!strcmp(command, "time")) {
-            /* set time left on clock */
-            sscanf(line, "time %d", &TimeLeft);
-            TimeLeft *= 10;     /* centi-sec to ms */
-            continue;
-        }
-        if (!strcmp(command, "otim")) {
-            /* opponent's time (not kept, so ignore) */
-            continue;
-        }
-        if (!strcmp(command, "go")) {
-            /* set computer to play current side to move */
-            Computer = Side;
-            MovesLeft = -(GamePtr + (Side == WHITE) >> 1);
-            while (MaxMoves > 0 && MovesLeft <= 0)
-                MovesLeft += MaxMoves;
-            continue;
-        }
-        if (!strcmp(command, "hint")) {
-            Ticks = GetTickCount();
-            tlim = 1000;
-            D(Side, -I, I, Q, O, S + 1, 6);
-            if (K == 0 && L == 0)
-                continue;
-            printf("Hint: ");
-            printf("%c%c%c%c", 'a' + (K & 7), '8' - (K >> 4),
-                   'a' + (L & 7), '8' - (L >> 4));
-            printf("\n");
-            continue;
-        }
-        if (!strcmp(command, "undo") && (nr = 1) ||
-            !strcmp(command, "remove") && (nr = 2)) {
-            /* 'take back' moves by replaying game */
-            /* from history until desired ply      */
-            if (GamePtr < nr)
-                continue;
-            GamePtr -= nr;
-            HistPtr -= nr;      /* erase history boards */
-            while (nr-- > 0)
-                for (m = 0; m < STATE; m++)
-                    HistoryBoards[HistPtr + nr + 1 & 1023][m] = 0;
-            InitGame();
-            for (nr = 0; nr < GamePtr; nr++) {
-                UNPACK_MOVE(GameHistory[nr]);
-                D(Side, -I, I, Q, O, 8, 3);
-                Side ^= 24;
-            }
-            continue;
-        }
-        if (!strcmp(command, "post")) {
-            Post = 1;
-            continue;
-        }
-        if (!strcmp(command, "nopost")) {
-            Post = 0;
-            continue;
-        }
-        if (!strcmp(command, "edit")) {
-            int color = WHITE;
-
-            while (fgets(line, 256, stdin)) {
-                m = line[0];
-                if (m == '.')
-                    break;
-                if (m == '#') {
-                    for (i = 0; i < 128; i++)
-                        b[i & 0x77] = 0;
-                    R = 40;
-                    Q = 0;
-                    O = S;
-                    continue;
-                }
-                if (m == 'c') {
-                    color = WHITE + BLACK - color;
-                    Q = -Q;
-                    continue;
-                }
-                if ((m == 'P' || m == 'N' || m == 'B' ||
-                     m == 'R' || m == 'Q' || m == 'K')
-                    && line[1] >= 'a' && line[1] <= 'h'
-                    && line[2] >= '1' && line[2] <= '8') {
-                    m = line[1] - 16 * line[2] + 799;
-                    switch (line[0]) {
-                    case 'P':
-                        if (color == WHITE)
-                            b[m] = (m & 0x70) == 0x60 ? 9 : 41;
-                        else
-                            b[m] = (m & 0x70) == 0x10 ? 18 : 50;
-                        Q += 2 * 37;
-                        break;
-                    case 'N':
-                        b[m] = 3 + color;
-                        Q += 7 * 37;
-                        R -= 2;
-                        break;
-                    case 'B':
-                        b[m] = 5 + color;
-                        Q += 8 * 37;
-                        R -= 2;
-                        break;
-                    case 'R':
-                        b[m] = 6 + color + 32;
-                        if ((m == 0x00 || m == 0x07)
-                            && color == BLACK || (m == 0x70 || m == 0x77)
-                            && color == WHITE)
-                            b[m] -= 32;
-                        Q += 12 * 37;
-                        R -= 3;
-                        break;
-                    case 'Q':
-                        b[m] = 7 + color;
-                        Q += 23 * 37;
-                        R -= 6;
-                        break;
-                    case 'K':
-                        b[m] = 4 + color + 32;
-                        if (m == 0x04 && color == BLACK ||
-                            m == 0x74 && color == WHITE)
-                            b[m] -= 32;
-                        break;
-                    }
-                    continue;
-                }
-            }
-            if (Side != color)
-                Q = -Q;
-            continue;
-        }
-        /* command not recognized, assume input move */
-        m = line[0] < 'a' | line[0] > 'h' | line[1] < '1' | line[1] > '8' |
-            line[2] < 'a' | line[2] > 'h' | line[3] < '1' | line[3] > '8';
-        PromPiece = line[4];
-        {
-            char *c = line;
-            K = c[0] - 16 * c[1] + 799;
-            L = c[2] - 16 * c[3] + 799;
-        }
-        if (m)
-            /* doesn't have move syntax */
-            printf("Error (unknown command): %s\n", command);
-        else if (D(Side, -I, I, Q, O, 8, 3) != I) {
-            /* did have move syntax, but illegal move */
-            printf("Illegal move:%s\n", line);
-        } else {                /* legal move, perform it */
-            GameHistory[GamePtr++] = PACK_MOVE;
-            Side ^= 24;
-            CopyBoard(HistPtr = HistPtr + 1 & 1023);
-            if (PrintResult(Side))
-                Computer = EMPTY;
-        }
-    }
-}
-
-

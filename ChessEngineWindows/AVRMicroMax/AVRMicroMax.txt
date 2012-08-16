@@ -1,1 +1,1 @@
-./Debug/chessengine.o
+./Debug/chessengine.o ./Debug/main.o

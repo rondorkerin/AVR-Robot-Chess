@@ -88,3 +88,10 @@ and this might require some reworking. I might need to make the game board histo
 
 8:27 PM
 Wow, there was a LOT to clean up. I'm still using sprintf from stdio, hopefully I can use that in the AVR. Other than that things are looking about done. 
+
+8/16/2012
+I attempted to port to AVR studio and found I had errors when trying to put my engine in a separate file from main. This is due to not understanding public/private headers. I was compiling inline
+functions twice with using only public headers. Now I have created a private and public header to chess engine.
+
+I found that my engine was able to compile and run on the simulator. It took up about 1KB of data memory (out of 8k) and about 6.1% of program memory (totalling about 8KB). This means that the program
+is very low footprint which is good. We still need a big MCU for pin count but it looks like we could have done I2C.

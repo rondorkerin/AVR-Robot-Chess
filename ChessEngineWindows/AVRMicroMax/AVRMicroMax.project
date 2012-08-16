@@ -88,5 +88,7 @@
   <VirtualDirectory Name="src">
     <File Name="chessengine.h"/>
     <File Name="chessengine.c"/>
+    <File Name="main.c"/>
+    <File Name="chessengine_p.h"/>
   </VirtualDirectory>
 </CodeLite_Project>

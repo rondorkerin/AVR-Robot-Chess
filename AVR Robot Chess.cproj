@@ -65,17 +65,17 @@
     <avrtoolinterface />
     <avrtool>com.atmel.avrdbg.tool.simulator</avrtool>
     <com_atmel_avrdbg_tool_simulator>
-      <ToolType xmlns="">com.atmel.avrdbg.tool.simulator</ToolType>
-      <ToolName xmlns="">AVR Simulator</ToolName>
-      <ToolNumber xmlns="">
+      <ToolType>com.atmel.avrdbg.tool.simulator</ToolType>
+      <ToolName>AVR Simulator</ToolName>
+      <ToolNumber>
       </ToolNumber>
-      <KeepTimersRunning xmlns="">true</KeepTimersRunning>
-      <OverrideVtor xmlns="">false</OverrideVtor>
-      <OverrideVtorValue xmlns="">
+      <KeepTimersRunning>true</KeepTimersRunning>
+      <OverrideVtor>false</OverrideVtor>
+      <OverrideVtorValue>
       </OverrideVtorValue>
-      <Channel xmlns="">
+      <Channel>
         <host>127.0.0.1</host>
-        <port>2250</port>
+        <port>3022</port>
         <ssl>False</ssl>
       </Channel>
     </com_atmel_avrdbg_tool_simulator>
@@ -228,6 +228,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\chessengine.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\chessengine.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\chessengine_p.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\main.c">

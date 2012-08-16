@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=nul4x3r0000
-Date                   :=8/12/2012
+Date                   :=8/16/2012
 CodeLitePath           :="C:\Program Files (x86)\CodeLite"
 LinkerName             :=gcc
 ArchiveTool            :=ar rcus
@@ -53,7 +53,7 @@ LibPath                := $(LibraryPathSwitch).
 ##
 CodeLiteDir:=C:\Program Files (x86)\CodeLite
 UNIT_TEST_PP_SRC_DIR:=C:\UnitTest++-1.3
-Objects=$(IntermediateDirectory)/chessengine$(ObjectSuffix) 
+Objects=$(IntermediateDirectory)/chessengine$(ObjectSuffix) $(IntermediateDirectory)/main$(ObjectSuffix) 
 
 ##
 ## Main Build Targets 
@@ -84,6 +84,14 @@ $(IntermediateDirectory)/chessengine$(DependSuffix): chessengine.c
 $(IntermediateDirectory)/chessengine$(PreprocessSuffix): chessengine.c
 	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/chessengine$(PreprocessSuffix) "C:/Users/nul4x3r0000/Dropbox/Programming/AVR-Robot-Chess/ChessEngineWindows/AVRMicroMax/chessengine.c"
 
+$(IntermediateDirectory)/main$(ObjectSuffix): main.c $(IntermediateDirectory)/main$(DependSuffix)
+	$(C_CompilerName) $(SourceSwitch) "C:/Users/nul4x3r0000/Dropbox/Programming/AVR-Robot-Chess/ChessEngineWindows/AVRMicroMax/main.c" $(C_CmpOptions) $(ObjectSwitch)$(IntermediateDirectory)/main$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/main$(DependSuffix): main.c
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/main$(ObjectSuffix) -MF$(IntermediateDirectory)/main$(DependSuffix) -MM "C:/Users/nul4x3r0000/Dropbox/Programming/AVR-Robot-Chess/ChessEngineWindows/AVRMicroMax/main.c"
+
+$(IntermediateDirectory)/main$(PreprocessSuffix): main.c
+	@$(C_CompilerName) $(C_CmpOptions) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main$(PreprocessSuffix) "C:/Users/nul4x3r0000/Dropbox/Programming/AVR-Robot-Chess/ChessEngineWindows/AVRMicroMax/main.c"
+
 
 -include $(IntermediateDirectory)/*$(DependSuffix)
 ##
@@ -93,6 +101,9 @@ clean:
 	$(RM) $(IntermediateDirectory)/chessengine$(ObjectSuffix)
 	$(RM) $(IntermediateDirectory)/chessengine$(DependSuffix)
 	$(RM) $(IntermediateDirectory)/chessengine$(PreprocessSuffix)
+	$(RM) $(IntermediateDirectory)/main$(ObjectSuffix)
+	$(RM) $(IntermediateDirectory)/main$(DependSuffix)
+	$(RM) $(IntermediateDirectory)/main$(PreprocessSuffix)
 	$(RM) $(OutputFile)
 	$(RM) $(OutputFile).exe
 	$(RM) "C:\Users\nul4x3r0000\Dropbox\Programming\AVR-Robot-Chess\ChessEngineWindows\AVRMicroMax\.build-debug\AVRMicroMax"
