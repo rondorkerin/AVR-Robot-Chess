@@ -1,0 +1,10 @@
+step 1) Install drivers so it shows up as a com port
+Step 2) Hold down switch 0 and plug in the device to switch to "program" mode.
+Step 3) open up FLIP utility and hit select a communications medium, then select RS232. 
+Step 4) Select the COM port that your device shows up as and a baud rate and connect
+Step 5) Load the HEX file of the program you wish to upload
+Step 6) Click "Program Flash" 
+Step 7) Re-plug in your device and it will boot up the program stored in flash
+
+-Nick Bryant
+8/16/2012

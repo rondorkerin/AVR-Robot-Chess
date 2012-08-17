@@ -95,3 +95,15 @@ functions twice with using only public headers. Now I have created a private and
 
 I found that my engine was able to compile and run on the simulator. It took up about 1KB of data memory (out of 8k) and about 6.1% of program memory (totalling about 8KB). This means that the program
 is very low footprint which is good. We still need a big MCU for pin count but it looks like we could have done I2C.
+
+8 PM:
+Found that the simulator is running extremely slowly because it simulates the timers and therefore does not run in real time. Source: http://www2.tech.purdue.edu/ecet/courses/ecet309/Reference_Materials/Simulation_AVR_Studio_4.pdf
+
+If i want to check the timing I need to try blinking some LEDs and create a test run.
+
+8:10
+I did a test where I blink all LEDs then wait 4 seconds and turn them off. From that point, I do one run of the simulator and then blink the LEDS every 2 seconds. The test ran perfectly and very quickly. 
+My second test is where I issue a series of 3 commands to the board. A2a4, a4a5, and a5a6. When I reach a6 I should get my piece taken. If an enemy AI move causes a piece to be taken, the lights should blink slowly.
+If an enemy AI move does not, the lights should blink quickly. 
+
+I ran the test and on the third move the enemy properly captures the piece.
