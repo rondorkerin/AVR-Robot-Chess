@@ -236,6 +236,15 @@
     <Compile Include="src\chessengine_p.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\config\conf.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\io.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\io.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\main.c">
       <SubType>compile</SubType>
     </Compile>

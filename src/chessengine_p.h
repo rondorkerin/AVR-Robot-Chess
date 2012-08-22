@@ -19,10 +19,9 @@
  * E=e.p. sqr.z=prev.dest, n=depth; return score
  * Recursive minimax search, k=moving side
  */
-short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n); 
-void CopyBoard(int s);
-int GameStatusResult();
-int GetPieceCount();
+short minimax(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n); 
+int game_status_result();
+int get_piece_count();
 void mysrand(unsigned short r_);
 unsigned short myrand(void);
 

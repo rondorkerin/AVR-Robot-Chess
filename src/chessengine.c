@@ -9,12 +9,12 @@
  *  output param outTookPieceFlag - bit specifying whether a piece was taken
  *  output param outMove - algebraic format move the AI made
  */ 
-void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
+void ai_move(int* outGameResult, int* outTookPieceFlag, char* outMove)
 {
 	*outGameResult = *outTookPieceFlag = 0;
 	
 	// count the number of pieces for checking if a piece has been taken
-	int prevPieceCount = GetPieceCount();
+	int prevPieceCount = get_piece_count();
 	
 	// not sure what these variables even are but they were set at the beginning of sendcommand.
 	Z = 0;
@@ -32,7 +32,7 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
 	PromPiece = 'q';
 	N = 0;
 	K = I;
-	if (D(Side, -I, I, Q, O, 8, 3) == I) {
+	if (minimax(Side, -I, I, Q, O, 8, 3) == I) {
 		
 		// switch sides
 		Side ^= 24;
@@ -43,8 +43,8 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
 		outMove[2] = 'a' + (L & 7);
 		outMove[3] = '8' - (L >> 4);
 		
-		*outTookPieceFlag = GetPieceCount() == prevPieceCount ? 0 : 1;
-		*outGameResult = GameStatusResult();
+		*outTookPieceFlag = get_piece_count() == prevPieceCount ? 0 : 1;
+		*outGameResult = game_status_result();
 	} 
 	return;
 } 
@@ -57,12 +57,12 @@ void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove)
  *  output param outTookPieceFlag - bit specifying whether a piece was taken
  *  output param outMove - algebraic format move the AI made
  */ 
-char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag)
+char player_move(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag)
 {
 	*outGameResult = *outTookPieceFlag = *outIllegalMoveFlag = 0;
 	
 	// count the number of pieces for checking if a piece has been taken
-	int prevPieceCount = GetPieceCount();
+	int prevPieceCount = get_piece_count();
 	
 	// not sure what these variables even are but they were set at the beginning of sendcommand.
 	Z = 0;
@@ -81,7 +81,7 @@ char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outI
 		return;
 	}
 	
-	if (D(Side, -I, I, Q, O, 8, 3) != I) {
+	if (minimax(Side, -I, I, Q, O, 8, 3) != I) {
 		/* did have move syntax, but illegal move */
 		*outIllegalMoveFlag = 1;
 		return;
@@ -91,15 +91,15 @@ char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outI
 	Side ^= 24;
 	
 	// set output flags
-	*outTookPieceFlag = GetPieceCount() == prevPieceCount ? 0 : 1;
-	*outGameResult = GameStatusResult();
+	*outTookPieceFlag = get_piece_count() == prevPieceCount ? 0 : 1;
+	*outGameResult = game_status_result();
 }
 
 
 /*
  * Start the engine
  */
-void InitEngine()
+void init_engine()
 {
     int j;
 
@@ -113,7 +113,7 @@ void InitEngine()
 /*
  * Start a new game 
  */ 
-void InitGame(int gameType)
+void init_game(int gameType)
 {
     int i, j;
 
@@ -137,7 +137,7 @@ void InitGame(int gameType)
 /**
  *  Recursive Minimax Search
  */ 
-short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n)    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
+short minimax(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n)    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
 {                       
  short m,v,i,P,V,s;
  unsigned char t,p,u,x,y,X,Y,H,B,j,d,h,F,G,C;
@@ -155,7 +155,7 @@ short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,
    (K=X,L=Y&S-9,d=3)))                         /* time's up: go do best    */
  {x=B=X;                                       /* start scan at prev. best */
   h=Y&S;                                       /* request try noncastl. 1st*/
-  P=d>2&&l+I?D(24-k,-l,1-l,-e,S,S,d-3):I;      /* search null move         */
+  P=d>2&&l+I?minimax(24-k,-l,1-l,-e,S,S,d-3):I;      /* search null move         */
   m=-P<l|R>35?d-2?-I:e:-P;  /*** prune if > beta  unconsidered:static eval */
   ++N;                                         /* node count (for timing)  */
   do{u=b[x];                                   /* scan board looking for   */
@@ -192,7 +192,7 @@ short D(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,
        C=d-1-(d>5&p>2&!t&!h);                  /* nw depth, reduce non-cpt.*/
        C=R>30|P-I|d<3||t&&p-4?C:d;             /* extend 1 ply if in-check */
        do
-        s=C>2|v>V?-D(24-k,-l,-V,-v,/*** futility, recursive eval. of reply */
+        s=C>2|v>V?-minimax(24-k,-l,-V,-v,/*** futility, recursive eval. of reply */
                                     F,y,C):v;
        W(s>q&++C<d);v=s;                       /* no fail:re-srch unreduced*/
        if(z&8&&K-I)                            /* move pending: check legal*/
@@ -229,12 +229,12 @@ if(z==S+1)K=X,L=Y&~M;
  * returns the result of the present move (whether someone won or lost)
  * return value based on the GameResult enum
  */  
-int GameStatusResult(int side)
+int game_status_result(int side)
 {
     int i, j, k, cnt = 0;
 
     K = I;
-    cnt = D(side, -I, I, Q, O, side + 1, 3);
+    cnt = minimax(side, -I, I, Q, O, side + 1, 3);
     if (cnt == 0 && K == 0 && L == 0) {
         //printf("1/2-1/2 {Stalemate}\n");
         return StaleMate;
@@ -254,7 +254,7 @@ int GameStatusResult(int side)
 /*
  *  Checks to see if there was a piece taken in the last turn
  */ 
-int GetPieceCount()
+int get_piece_count()
 {
 	int j, count = 0;
 	

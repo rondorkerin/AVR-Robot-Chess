@@ -8,11 +8,10 @@
 /***************************************************************************/
 
 // Public functions
-void AIMove(int* outGameResult, int* outTookPieceFlag, char* outMove);
-char PlayerMove(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag);
-void NewGame();
-void InitEngine();
-void InitGame();
+void ai_move(int* outGameResult, int* outTookPieceFlag, char* outMove);
+char player_move(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag);
+void init_engine();
+void init_game();
 
 enum GameMode {
 	PlayerVsAI = 0,
