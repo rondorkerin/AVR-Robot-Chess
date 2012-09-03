@@ -248,6 +248,30 @@
     <Compile Include="src\main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\motordriver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\motordriver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests\enginetest.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests\enginetest.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests\iotest.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests\iotest.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests\test.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests\test.h">
+      <SubType>compile</SubType>
+    </Compile>
     <None Include="src\asf.h">
       <SubType>compile</SubType>
     </None>
@@ -339,6 +363,7 @@
     <Folder Include="src\asf\xmega\utils\bit_handling\" />
     <Folder Include="src\asf\xmega\utils\preprocessor\" />
     <Folder Include="src\config\" />
+    <Folder Include="src\tests" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\AvrGCC.targets" />
 </Project>

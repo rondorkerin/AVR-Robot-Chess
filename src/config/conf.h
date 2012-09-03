@@ -43,6 +43,9 @@
 #ifndef _CONF_EXAMPLE_H
 #define _CONF_EXAMPLE_H
 
+#include <asf.h>
+#define F_CPU 32000000UL // if we don't define the frequency of the CPU delay.h assumes it's 1 Mhz
+
 //! \note This is pin 0 on port A.
 #define GAMEMODE_SENSE_PIN     IOPORT_CREATE_PIN(PORTA, 0)
 //! \note This is pin 1 on port A.
@@ -59,7 +62,7 @@
 //! \note This is TC1 on port C.
 #define DEBOUNCE_TIMER_MODULE  TCC1
 //! \note This is TC0 on port D.
-#define TIMEOUT_TIMER_MODULE   TCD0
+//#define TIMEOUT_TIMER_MODULE   TCD0
 
 //! \name I/O port and pin config for board buttons
 //@{
@@ -75,9 +78,12 @@
 #define LED_IOPORT            PORTE
 //@}
 
+#define DEBUG_PORT PORTD
+#define DEBUG_USART USARTD0
+
 static inline void write_board_led_mask(uint8_t mask)
 {
-	LED_IOPORT.OUT = ~mask;
+	PORTE.OUT = ~mask;
 }
 
 #endif  // _CONF_EXAMPLE_H

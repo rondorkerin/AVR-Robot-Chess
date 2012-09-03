@@ -1,39 +1,32 @@
 
-/*
- * io.c
+/**
+ * \file io.c
+ * \brief "view" component of model view controller framework. Implements peripheral I/O functionality
  *
  * Created: 8/21/2012 8:12:31 PM
  *  Author: nul4x3r0000
  */ 
 
 #include "io.h"
-#include <asf.h>
-#include <conf.h>
-
-#ifdef __GNUC__
-#  include <util/delay.h>
-#else
-static inline void _delay_ms(uint16_t t)
-{
-	uint16_t i;
-
-	for (i = 0; i < t; ++i) {
-		__delay_cycles((unsigned long)sysclk_get_cpu_hz() / 6000);
-	}
-}
-#endif
+#include "tests/iotest.h"
+#include "tests/test.h"
+#include "motordriver.h"
 
 
 /**
  * \brief initializes i/o devices
  */
-void io_init()
+void init_io()
 {
-	// Init Arduino serial debugging.
-	PORTD.DIRSET   = PIN3_bm;   // Pin 3 (TXD0) as output.
-	USARTD0.CTRLC = (uint8_t) USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc | false; // USARTD0, 8 Data bits, No Parity, 1 Stop bit
-	USARTD0.BAUDCTRLA = 12;
-	USARTD0.CTRLB |= USART_TXEN_bm | USART_RXEN_bm; // Enable both RX and TX
+	// set clock to 32 mhz
+	CCP = CCP_IOREG_gc;              // disable register security for oscillator update
+	OSC.CTRL = OSC_RC32MEN_bm;       // enable 32MHz oscillator
+	while(!(OSC.STATUS & OSC_RC32MRDY_bm)); // wait for oscillator to be ready
+	CCP = CCP_IOREG_gc;              // disable register security for clock update
+	CLK.CTRL = CLK_SCLKSEL_RC32M_gc; // switch to 32MHz clock
+	
+	// init servo timers
+	init_motordriver();
 }
 
 
@@ -42,88 +35,81 @@ void io_init()
  * \brief gets a player move in string format
  * \note example: 'a2a4'
  */
-char* get_player_move(int side)
+char* get_player_move(uint8_t side)
 {
 	while (1)
 	{
-		lcd_message("Please enter a move");
 		char move[4];
-		int num_moves = 0; // total number of moves recorded (we want to record 2 moves before leaving this loop)
 		int button;
-		while (num_moves < 2)
+	
+		// get user to press From button
+		while (1)
 		{
-			lcd_message("Please press 'From', 'To', or 'Clear'");
+			lcd_message("Please press 'From' to begin your move");
 			button = get_button_press(side);
-		
-			if (button == Clr)
+			if (button == From)
 			{
-				int i;
-				for (i = 0; i < 4; i++)
-				{
-					move[i] = ' ';
-				}
-				num_moves = 0;
-				lcd_message("Cleared.");
-				continue;
+				break;
 			}
+		}
 		
-			int offset = 0; // From: first 2 chars, To: second 2 chars
-			if (button == To)
-			{
-				offset = 2;	
-			}			
-		
-			// get letter
-			lcd_message("Specify letter A-H");
+		// get letter
+		while (1)
+		{
+			lcd_message("Specify letter corresponding to the piece you wish to move");
 			button = get_button_press(side);
-		
+			
 			if (button == To || button == From || button == Go || button == Clr)
 			{
 				lcd_message("Invalid letter.");
 				continue;
-			}			
+			}
 			else if (button == A1)
 			{
-				move[offset] = 'a';
+				move[0] = 'a';
 			}
 			else if (button == B2)
 			{
-				move[offset] = 'b';
+				move[0] = 'b';
 			}
 			else if (button == C3)
 			{
-				move[offset] = 'c';
+				move[0] = 'c';
 			}
 			else if (button == D4)
 			{
-				move[offset] = 'd';
+				move[0] = 'd';
 			}
 			else if (button == E5)
 			{
-				move[offset] = 'e';
+				move[0] = 'e';
 			}
 			else if (button == F6)
 			{
-				move[offset] = 'f';
+				move[0] = 'f';
 			}
 			else if (button == G7)
 			{
-				move[offset] = 'g';
+				move[0] = 'g';
 			}
 			else if (button == H8)
 			{
-				move[offset] = 'h';
+				move[0] = 'h';
 			}
 			else
 			{
 				// error
 				continue;
 			}
+			break;
+		}
 		
-			// get number
-			lcd_message("Specify number 1-8");
+		// get move from location number
+		while (1)
+		{
+			lcd_message("Specify number corresponding to the piece you wish to move");
 			button = get_button_press(side);
-		
+			
 			if (button == To || button == From || button == Go || button == Clr)
 			{
 				lcd_message("Invalid number.");
@@ -131,49 +117,163 @@ char* get_player_move(int side)
 			}
 			else if (button == A1)
 			{
-				move[offset+1] = '1';
+				move[1] = '1';
 			}
 			else if (button == B2)
 			{
-				move[offset+1] = '2';
+				move[1] = '2';
 			}
 			else if (button == C3)
 			{
-				move[offset+1] = '3';
+				move[1] = '3';
 			}
 			else if (button == D4)
 			{
-				move[offset+1] = '4';
+				move[1] = '4';
 			}
 			else if (button == E5)
 			{
-				move[offset+1] = '5';
+				move[1] = '5';
 			}
 			else if (button == F6)
 			{
-				move[offset+1] = '6';
+				move[1] = '6';
 			}
 			else if (button == G7)
 			{
-				move[offset+1] = '7';
+				move[1] = '7';
 			}
 			else if (button == H8)
 			{
-				move[offset+1] = '8';
+				move[1] = '8';
 			}
 			else
 			{
 				// error input
 				continue;
 			}
-		
-			num_moves++;
+			break;
 		}
-	
+		
+		// get user to press to button
 		while (1)
-		{		
+		{
+			lcd_message("Please press 'To' to begin your move");
+			button = get_button_press(side);
+			if (button == To)
+			{
+				break;
+			}
+		}
+		
+		// get move to location letter
+		while (1)
+		{
+			lcd_message("Specify letter corresponding to the piece you wish to move");
+			button = get_button_press(side);
+			
+			if (button == To || button == From || button == Go || button == Clr)
+			{
+				lcd_message("Invalid letter.");
+				continue;
+			}
+			else if (button == A1)
+			{
+				move[2] = 'a';
+			}
+			else if (button == B2)
+			{
+				move[2] = 'b';
+			}
+			else if (button == C3)
+			{
+				move[2] = 'c';
+			}
+			else if (button == D4)
+			{
+				move[2] = 'd';
+			}
+			else if (button == E5)
+			{
+				move[2] = 'e';
+			}
+			else if (button == F6)
+			{
+				move[2] = 'f';
+			}
+			else if (button == G7)
+			{
+				move[2] = 'g';
+			}
+			else if (button == H8)
+			{
+				move[2] = 'h';
+			}
+			else
+			{
+				// error
+				continue;
+			}
+			break;
+		}
+		
+		// get move to location number
+		while (1)
+		{
+			// get number
+			lcd_message("Specify number corresponding to the piece you wish to move to");
+			button = get_button_press(side);
+			
+			if (button == To || button == From || button == Go || button == Clr)
+			{
+				lcd_message("Invalid number.");
+				continue;
+			}
+			else if (button == A1)
+			{
+				move[3] = '1';
+			}
+			else if (button == B2)
+			{
+				move[3] = '2';
+			}
+			else if (button == C3)
+			{
+				move[3] = '3';
+			}
+			else if (button == D4)
+			{
+				move[3] = '4';
+			}
+			else if (button == E5)
+			{
+				move[3] = '5';
+			}
+			else if (button == F6)
+			{
+				move[3] = '6';
+			}
+			else if (button == G7)
+			{
+				move[3] = '7';
+			}
+			else if (button == H8)
+			{
+				move[3] = '8';
+			}
+			else
+			{
+				// error input
+				continue;
+			}
+			break;
+		}
+		
+		// get user confirmation
+		while (1)
+		{
 			lcd_message(move);
-			lcd_message("Press 'Go' or 'Clear'");
+			lcd_message("Is this correct? Press 'Go' or 'Clear'");
 			button = get_button_press(side);
 			if (button == Clr)
 			{
@@ -184,10 +284,10 @@ char* get_player_move(int side)
 			{
 				return move;
 			}
-		}		
-	}		
+		}
+		
+	}
 }
-
 
 
 /**
@@ -201,60 +301,88 @@ void lcd_message(char* text)
 
 
 /**
- * \brief sends a debug message to Arduino serial monitor.
+ * \brief activates an LED given by the integer position
+ * \param position position in [0,63] on board, 
  */
-void debug(char *message)
+void activate_led(uint8_t posx, uint8_t posy)
 {
-	int i = 0;
-	while(message[i] != '\0') //hacked because sizeof doesnt work???
-	{
-		// Transmit a character, first wait for the previous to be sent
-		while( (USARTD0.STATUS & USART_DREIF_bm) == 0 ) {}
-		// Now, transmit the character
-		USARTD0.DATA = message[i];
-
-		i++;
-	}
-	while( (USARTD0.STATUS & USART_DREIF_bm) == 0 ) {}
-	USARTD0.DATA = '\n';
-}	
+	if (posx == 0)
+		LED_IOPORT.OUT = 0xff;	
+	else
+		LED_IOPORT.OUT = 0x00;
+}
 
 
 /**
  * \brief returns an integer representing the button pressed by the user.
- *  definitions can be found in the header file.
+ * \note buttons in the low position are pressed, in the high position they are not pressed
  */
-int get_button_press(int side)
+uint8_t get_button_press(uint8_t side)
 {
-	int mask = 0;
+	uint8_t mask = 0x00;
 
 	// block while waiting for button press
-	while (mask == 0x0)
+	while (mask == 0x00)
 	{
 		mask = ~BUTTON_IOPORT_1.IN & BUTTON_BITMASK_1;
 		mask |= (~BUTTON_IOPORT_2.IN & BUTTON_BITMASK_2) << BUTTON_BITPOSITION_2;
 	}
+	return mask;
 	
-	switch(mask)
-	{
-		case 1 << 0:
-		return A1;
-		case 1 << 1:
-		return B2;
-		case 1 << 2:
-		return C3;
-		case 1 << 3:
-		return D4;
-		case 1 << 4:
-		return E5;
-		case 1 << 5:
-		return F6;
-		case 1 << 6:
-		return G7;
-		case 1 << 7:
-		return H8;
-		default:
-		return IO_ERROR;
-	}
+	/* Use this kind of stuff when reading real values from buttons
+	
+		uint8_t mask = 0xF7;
+
+		// block while waiting for button press
+		while (mask == 0xF7)
+		{
+			mask = ~BUTTON_IOPORT_1.IN & BUTTON_BITMASK_1;
+			mask |= (~BUTTON_IOPORT_2.IN & BUTTON_BITMASK_2) << BUTTON_BITPOSITION_2;
+		}
+		
+		switch(mask)
+		{
+			case 1 << 0:
+			return A1;
+			case 1 << 1:
+			return B2;
+			case 1 << 2:
+			return C3;
+			case 1 << 3:
+			return D4;
+			case 1 << 4:
+			return E5;
+			case 1 << 5:
+			return F6;
+			case 1 << 6:
+			return G7;
+			case 1 << 7:
+			return H8;
+		}
+		return ButtonError;
+		*/
 }
 
+
+/**
+ * \brief moves a piece from location to location
+ */
+void move_piece(uint8_t from_posx, uint8_t from_posy, uint8_t to_posx, uint8_t to_posy)
+{
+		center_at_origin();
+		/*
+		move_x_stepper( from_posx );
+		move_y_stepper( from_posy );
+		open_clamp();
+		move_z_stepper(0);
+		close_clamp();
+		move_z_stepper(1);
+		center_at_origin();
+		move_x_stepper( to_posx );
+		move_y_stepper( to_posy );
+		move_z_stepper(0);
+		open_clamp();
+		move_z_stepper(1);
+		center_at_origin();
+		*/
+}

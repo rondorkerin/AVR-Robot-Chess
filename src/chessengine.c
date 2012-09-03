@@ -1,13 +1,22 @@
+/**
+ * \file chessengine.c
+ *
+ * \brief Implementation of MicroMax chess module
+ * 
+ * Created: 8/24/2012 9:43:35 PM
+ *  Author: nul4x3r0000
+ */ 
+
 #include "chessengine.h"
 #include "chessengine_p.h"
 
-/*
- *  Cause the AI to think a move for the current position
+/**
+ *  \brief Cause the AI to think a move for the current position
  *  and execute move
  *  
- *  output param outGameResult - enum for result of the move (stalemate checkmate)
- *  output param outTookPieceFlag - bit specifying whether a piece was taken
- *  output param outMove - algebraic format move the AI made
+ *  \param outGameResult enum for result of the move (stalemate checkmate)
+ *  \param outTookPieceFlag bit specifying whether a piece was taken
+ *  \param outMove algebraic format move the AI made
  */ 
 void ai_move(int* outGameResult, int* outTookPieceFlag, char* outMove)
 {
@@ -50,13 +59,15 @@ void ai_move(int* outGameResult, int* outTookPieceFlag, char* outMove)
 } 
 
 
-/*
- *  Executes a move specified in algebraic format ex: a2a4
+/**
+ *  \brief Executes a move specified in algebraic format ex: a2a4
  *  
- *  output param outGameResult - enum for result of the move (stalemate checkmate)
- *  output param outTookPieceFlag - bit specifying whether a piece was taken
- *  output param outMove - algebraic format move the AI made
+ *  \param outGameResult enum for result of the move (stalemate checkmate)
+ *  \param outTookPieceFlag bit specifying whether a piece was taken
+ *  \param outMove algebraic format move the AI made
  */ 
+
+
 char player_move(char* move, int* outGameResult, int* outTookPieceFlag, int* outIllegalMoveFlag)
 {
 	*outGameResult = *outTookPieceFlag = *outIllegalMoveFlag = 0;
@@ -96,8 +107,8 @@ char player_move(char* move, int* outGameResult, int* outTookPieceFlag, int* out
 }
 
 
-/*
- * Start the engine
+/** 
+ * \brief Start the engine
  */
 void init_engine()
 {
@@ -110,8 +121,8 @@ void init_engine()
     }                           /*(in unused half b[]) */
 }
 
-/*
- * Start a new game 
+/**
+ * \brief Start a new game 
  */ 
 void init_game(int gameType)
 {
@@ -135,7 +146,7 @@ void init_game(int gameType)
 }
 
 /**
- *  Recursive Minimax Search
+ *  \brief Recursive Minimax Search
  */ 
 short minimax(unsigned char k,short q,short l,short e,unsigned char E,unsigned char z,unsigned char n)    /* E=e.p. sqr.z=prev.dest, n=depth; return score */
 {                       
@@ -225,9 +236,9 @@ if(z==S+1)K=X,L=Y&~M;
  --Z;return m+=m<e;                            /* delayed-loss bonus       */
 }
 
-/*
- * returns the result of the present move (whether someone won or lost)
- * return value based on the GameResult enum
+/**
+ * \brief returns the result of the present move (whether someone won or lost)
+ * \return value based on the GameResult enum
  */  
 int game_status_result(int side)
 {
@@ -251,8 +262,8 @@ int game_status_result(int side)
     return InPlay;
 }
 
-/*
- *  Checks to see if there was a piece taken in the last turn
+/**
+ *  \brief Checks to see if there was a piece taken in the last turn
  */ 
 int get_piece_count()
 {
@@ -271,7 +282,7 @@ int get_piece_count()
 
 
 /**
- * Seed random number generator
+ * \brief Seed random number generator
  */ 
 void mysrand(unsigned short r_)
 {
@@ -280,7 +291,7 @@ void mysrand(unsigned short r_)
 
 
 /**
- * Get value from random number generator
+ * \brief Get value from random number generator
  */ 
 unsigned short myrand(void) 
 {

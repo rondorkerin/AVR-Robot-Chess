@@ -1,11 +1,15 @@
+/**
+ * \file chessengine.h
+ *
+ * \brief contains public interface to chess engine
+ *
+ * Created: 8/24/2012 9:43:35 PM
+ *  Author: nul4x3r0000
+ */ 
+
+
 #ifndef _CHESSENGINE
 #define _CHESSENGINE
-
-/***************************************************************************/
-/*                               micro-Max,                                */
-/* A chess program smaller than 2KB (of non-blank source), by H.G. Muller  */
-/* Port to Atmel ATMega and AVR GCC, by Andre Adrian                       */
-/***************************************************************************/
 
 // Public functions
 void ai_move(int* outGameResult, int* outTookPieceFlag, char* outMove);
@@ -25,4 +29,5 @@ enum GameResult {
 	BlackMates,
 	WhiteMates
 };
+
 #endif

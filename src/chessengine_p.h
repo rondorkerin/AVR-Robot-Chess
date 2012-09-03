@@ -1,3 +1,12 @@
+/**
+ * \file chessengine_p.h
+ *
+ * \brief contains private declarations for chess engine related pieces 
+ *
+ * Created: 8/24/2012 9:43:35 PM
+ *  Author: nul4x3r0000
+ */ 
+
 #ifndef CHESSENGINE_P
 #define CHESSENGINE_P
 
@@ -12,9 +21,6 @@
 /* convert intger argument back to engine move representation */
 #define UNPACK_MOVE(A) K = (A)>>8 & 255; L = (A) & 255;
 
-
-
-// private functions
 /* (q,l)=window, e=current eval. score
  * E=e.p. sqr.z=prev.dest, n=depth; return score
  * Recursive minimax search, k=moving side
