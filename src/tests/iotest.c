@@ -19,7 +19,7 @@
  */
 void io_test_init()
 {
-	debug("initializing I/O devices");
+	//debug("initializing I/O devices");
 	init_io();	
 }
 
@@ -46,21 +46,6 @@ void clamp_servo_test()
 	}	
 }
 
-/*
- * \brief this button waits for a button press and sends the resulting button press over the debug interface.
- * \note blinks LEDs if a button press was found as well.
- */
-void button_press_test(uint8_t side)
-{
-	// NOTE: This test does not currently work
-	while(1)
-	{		
-		uint8_t i = get_button_press(side);
-		write_board_led_mask(i);
-	}
-}
-
-
 
 /*
  * \brief moves x stepper and blinks some LEDs
@@ -75,4 +60,22 @@ void x_stepper_test()
 		//move_x_stepper(300, 0);
 		//_delay_ms(1000);			
 	}
+}
+
+
+void lcd_test()
+{
+	while(1)
+	{
+		lcd_message("abcdefghijklmnopqrstuvwxyz", Player1);
+		_delay_ms(1000);
+	}
+}
+
+void serial_debug_test()
+{
+	while(1)
+	{
+		debug("hello world");
+	}		
 }

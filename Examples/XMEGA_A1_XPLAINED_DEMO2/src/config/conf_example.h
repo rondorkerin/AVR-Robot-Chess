@@ -74,9 +74,5 @@
 #define LED_IOPORT            PORTE
 //@}
 
-static inline void write_board_led_mask(uint8_t mask)
-{
-	LED_IOPORT.OUT = ~mask;
-}
 
 #endif  // _CONF_EXAMPLE_H

@@ -30,16 +30,13 @@ void init_motordriver()
 	PORTC.DIRSET = PIN0_bm; // config PORTC:0 as output to servo
 	PORTC.DIRSET = PIN1_bm; // config PORTC:1 as clock output to stepper
 	PORTC.DIRSET = PIN2_bm; // config PORTC:2 as CW/CCW pin for motor control.
-	PORTC.DIRSET = PIN3_bm; // config PORTC:2 as CW/CCW pin for motor control.
-	PORTC.DIRSET = PIN4_bm; // config PORTC:2 as CW/CCW pin for motor control.
-	PORTC.DIRSET = PIN5_bm; // config PORTC:2 as CW/CCW pin for motor control.
-	PORTC.DIRSET = PIN6_bm; // config PORTC:2 as CW/CCW pin for motor control.
-	PORTC.DIRSET = PIN7_bm; // config PORTC:2 as CW/CCW pin for motor control.
+
 	// note: pin 0 corresponds to channel A, pin 3 corresponds to channel D (CCA-CCD)
 
 	TCC0.CTRLA = TC_CLKSEL_DIV1024_gc; // 32M/1024=32K
 	//TCC0.CTRLB |= TC0_CCAEN_bm | TC0_WGMODE0_bm; // enable compare capture for pin 0
 	TCC0.CTRLB |= TC0_CCAEN_bm | TC0_WGMODE1_bm | TC0_WGMODE0_bm; // enable compare capture for pin 0
+
 	TCC0.PER =  654; //took 2^15*.02 - 1 approx 20ms 
 }
 
@@ -80,11 +77,7 @@ void move_x_stepper(uint8_t steps, uint8_t direction)
 	if (direction)
 	{
 		PORTC.OUTSET = PIN2_bm;
-		PORTC.OUTSET = PIN3_bm;
-		PORTC.OUTSET = PIN4_bm;
-		PORTC.OUTSET = PIN5_bm;
-		PORTC.OUTSET = PIN6_bm;
-		PORTC.OUTSET = PIN7_bm;
+
 	}
 	else
 	{

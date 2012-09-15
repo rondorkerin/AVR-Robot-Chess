@@ -14,8 +14,9 @@
 
 void io_test_init();
 void clamp_servo_test();
-void button_press_test(uint8_t side);
 void x_stepper_test();
+void lcd_test();
+void serial_debug_test();
 
 
 #endif /* IOTEST_H_ */

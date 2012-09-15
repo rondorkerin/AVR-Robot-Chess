@@ -260,6 +260,12 @@
     <Compile Include="src\tests\enginetest.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\tests\integrationtest.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests\integrationtest.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\tests\iotest.c">
       <SubType>compile</SubType>
     </Compile>

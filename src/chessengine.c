@@ -51,6 +51,7 @@ void ai_move(int* outGameResult, int* outTookPieceFlag, char* outMove)
 		outMove[1] =  '8' - (K >> 4);
 		outMove[2] = 'a' + (L & 7);
 		outMove[3] = '8' - (L >> 4);
+		outMove[4] = '\0';
 		
 		*outTookPieceFlag = get_piece_count() == prevPieceCount ? 0 : 1;
 		*outGameResult = game_status_result();

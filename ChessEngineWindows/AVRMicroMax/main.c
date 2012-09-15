@@ -2,7 +2,7 @@
 #include "chessengine.h"
 
 int main(int argc, char **argv)
-{
+{	
     printf("enter a move format letter number letter number\n");
     InitEngine();
     InitGame(PlayerVsAI);

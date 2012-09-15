@@ -46,7 +46,27 @@
 #include <asf.h>
 #define F_CPU 32000000UL // if we don't define the frequency of the CPU delay.h assumes it's 1 Mhz
 
-//! \note This is pin 0 on port A.
+//! HMI for player 1
+#define HMI1_LCD_PIN     IOPORT_CREATE_PIN(PORTD, 3)
+#define HMI1_BUTTON_PRESSED_PIN     IOPORT_CREATE_PIN(PORTD, 0)
+#define HMI1_BUTTON_PIN1	IOPORT_CREATE_PIN(PORTD, 1)
+#define HMI1_BUTTON_PIN2	IOPORT_CREATE_PIN(PORTD, 2)
+#define HMI1_BUTTON_PIN3	IOPORT_CREATE_PIN(PORTD, 4)
+
+//! Shared Priority encoder
+#define HMI_SHARED_BUTTON_PRESSED_PIN     IOPORT_CREATE_PIN(PORTD, 4)  
+#define HMI_SHARED_BUTTON_PIN1     IOPORT_CREATE_PIN(PORTD, 5)  
+#define HMI_SHARED_BUTTON_PIN2     IOPORT_CREATE_PIN(PORTD, 6)  
+#define HMI_SHARED_BUTTON_PIN3     IOPORT_CREATE_PIN(PORTD, 7) 
+
+//! HMI for player 2
+#define HMI2_LCD_PIN     IOPORT_CREATE_PIN(PORTA, 5)
+#define HMI2_BUTTON_PRESSED_PIN     IOPORT_CREATE_PIN(PORTE, 0)
+#define HMI2_BUTTON_PIN1     IOPORT_CREATE_PIN(PORTE, 1)
+#define HMI2_BUTTON_PIN2     IOPORT_CREATE_PIN(PORTE, 2)
+#define HMI2_BUTTON_PIN3     IOPORT_CREATE_PIN(PORTE, 3)
+
+/*
 #define GAMEMODE_SENSE_PIN     IOPORT_CREATE_PIN(PORTA, 0)
 //! \note This is pin 1 on port A.
 #define GAMEMODE_GROUND_PIN    IOPORT_CREATE_PIN(PORTA, 1)
@@ -63,19 +83,14 @@
 #define DEBOUNCE_TIMER_MODULE  TCC1
 //! \note This is TC0 on port D.
 //#define TIMEOUT_TIMER_MODULE   TCD0
+*/
 
 //! \name I/O port and pin config for board buttons
 //@{
-#define BUTTON_IOPORT_1       PORTD
-#define BUTTON_BITMASK_1      0x3f
-#define BUTTON_IOPORT_2       PORTR
-#define BUTTON_BITMASK_2      0x03
-#define BUTTON_BITPOSITION_2  6
 //@}
 
 //! \name I/O port config for all board LEDs
 //@{
-#define LED_IOPORT            PORTE
 //@}
 
 #define DEBUG_PORT PORTD

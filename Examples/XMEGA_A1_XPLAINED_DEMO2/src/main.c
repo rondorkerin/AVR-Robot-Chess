@@ -102,6 +102,12 @@ static inline void _delay_ms(uint16_t t)
 	}
 }
 #endif
+static inline void write_board_led_mask(uint8_t mask)
+{
+	LED_IOPORT.OUT = ~mask;
+}
+
+
 
 //! \name Board-specific application configuration
 //@{
@@ -265,9 +271,9 @@ int main(void)
 			SOUND_SINEWAVE : SOUND_SAMPLES;
 
 	while (1) {
-		uint8_t buttons;
+		uint8_t buttons = 0xFF;
 
-		buttons = get_board_button_mask();
+		//buttons = get_board_button_mask();
 
 		switch (gamemode) {
 		case GAME_RECORD_MODE:

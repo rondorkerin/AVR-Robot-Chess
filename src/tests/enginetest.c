@@ -55,12 +55,6 @@ void pawn_rush_test()
 				}	
 			}
 		}
-
-
-		
-		
 	}
-	
-	
 }
 

@@ -11,6 +11,7 @@
 #include "tests/iotest.h"
 #include "tests/test.h"
 #include "motordriver.h"
+#include <stdio.h>
 
 
 /**
@@ -18,6 +19,10 @@
  */
 void init_io()
 {
+	//PORTC.DIRSET = 0xFF;
+	// set LEDs to output
+	//PORTE.DIRSET = 0xFF;
+	
 	// set clock to 32 mhz
 	CCP = CCP_IOREG_gc;              // disable register security for oscillator update
 	OSC.CTRL = OSC_RC32MEN_bm;       // enable 32MHz oscillator
@@ -25,8 +30,49 @@ void init_io()
 	CCP = CCP_IOREG_gc;              // disable register security for clock update
 	CLK.CTRL = CLK_SCLKSEL_RC32M_gc; // switch to 32MHz clock
 	
+	_delay_ms(5000);
+	
+	// configure buttons
+	gpio_configure_pin(HMI1_BUTTON_PRESSED_PIN, IOPORT_DIR_INPUT | IOPORT_PULL_UP);
+	PORTD.PIN0CTRL = PORT_ISC_RISING_gc;
+	gpio_configure_pin(HMI1_BUTTON_PIN1, IOPORT_DIR_INPUT | IOPORT_PULL_DOWN);
+	gpio_configure_pin(HMI1_BUTTON_PIN2, IOPORT_DIR_INPUT | IOPORT_PULL_DOWN);
+	gpio_configure_pin(HMI1_BUTTON_PIN3, IOPORT_DIR_INPUT | IOPORT_PULL_DOWN);	
+	
+	// configure LCD screen
+	
+	gpio_configure_pin(HMI1_LCD_PIN, IOPORT_DIR_OUTPUT);
+	
+	
+	//int bsel = 245; // 9600 @ 32Mhz as calculated from ProtoTalk Calc
+	//uint8_t bscale = 207;
+	//USARTD0.BAUDCTRLA = (uint8_t) bsel;
+	//USARTD0.BAUDCTRLB = (bscale << 4) | (bsel >> 8);
+	//USARTD0.BAUDCTRLA = 12;
+	// enable only TX
+	//USARTD0.CTRLB |= USART_TXEN_bm;
+	
+	USARTD0_BAUDCTRLB = 204;
+	USARTD0_BAUDCTRLA = 245;
+	//USARTD0_CTRLA = 0x30; //receive interrupt
+	USARTD0_CTRLB = USART_TXEN_bm;//0x18; //enable tx rx
+	//USARTD0_CTRLC = 0x03;
+	USARTD0.CTRLC = USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc; // Set USART Format to 8bit, no parity, 1 stop bit
+	//PORTD_DIR |= 0x08;
+	//PORTF_OUT = 0x08;
+	//PORTD.DIRCLR = 0x04; 
+	//set PMIC high level enable
+	//PMIC.CTRL |= 0x04;
+	
+	// initialize LCD
+	//unsigned char initCommands[11] = {0xFE, 0x41, 0xFE, 0x51, 0xFE, 0x52, 50, 0xFE, 0x53, 4, '\0'};
+	//lcd_putstring(initCommands, Player1);
+	lcd_putchar(0xFE, Player1); lcd_putchar(0x41, Player1); lcd_putchar(0xFE, Player1); lcd_putchar(0x51, Player1); lcd_putchar(0xFE, Player1); lcd_putchar(0x52, Player1); lcd_putchar(50, Player1); lcd_putchar(0xFE, Player1); lcd_putchar(0x53, Player1); lcd_putchar(4, Player1);
+	//lcd_putstring(initCommands, Player2);
+	
 	// init servo timers
 	init_motordriver();
+	
 }
 
 
@@ -39,13 +85,14 @@ char* get_player_move(uint8_t side)
 {
 	while (1)
 	{
-		char move[4];
+		char move[5];
+		move[4] = '\0';
 		int button;
 	
 		// get user to press From button
 		while (1)
 		{
-			lcd_message("Please press 'From' to begin your move");
+			lcd_message("Please press 'From' to begin your move", side);
 			button = get_button_press(side);
 			if (button == From)
 			{
@@ -56,12 +103,12 @@ char* get_player_move(uint8_t side)
 		// get letter
 		while (1)
 		{
-			lcd_message("Specify letter corresponding to the piece you wish to move");
+			lcd_message("Specify letter corresponding to the piece you wish to move", side);
 			button = get_button_press(side);
 			
 			if (button == To || button == From || button == Go || button == Clr)
 			{
-				lcd_message("Invalid letter.");
+				lcd_message_delay("Invalid letter.", side, 3000);
 				continue;
 			}
 			else if (button == A1)
@@ -107,12 +154,12 @@ char* get_player_move(uint8_t side)
 		// get move from location number
 		while (1)
 		{
-			lcd_message("Specify number corresponding to the piece you wish to move");
+			lcd_message("Specify number corresponding to the piece you wish to move", side);
 			button = get_button_press(side);
 			
 			if (button == To || button == From || button == Go || button == Clr)
 			{
-				lcd_message("Invalid number.");
+				lcd_message_delay("Invalid number.", side, 3000);
 				continue;
 			}
 			else if (button == A1)
@@ -158,7 +205,7 @@ char* get_player_move(uint8_t side)
 		// get user to press to button
 		while (1)
 		{
-			lcd_message("Please press 'To' to begin your move");
+			lcd_message("Please press 'To' to begin your move", side);
 			button = get_button_press(side);
 			if (button == To)
 			{
@@ -169,12 +216,12 @@ char* get_player_move(uint8_t side)
 		// get move to location letter
 		while (1)
 		{
-			lcd_message("Specify letter corresponding to the piece you wish to move");
+			lcd_message("Specify letter corresponding to the piece you wish to move", side);
 			button = get_button_press(side);
 			
 			if (button == To || button == From || button == Go || button == Clr)
 			{
-				lcd_message("Invalid letter.");
+				lcd_message_delay("Invalid letter.", side, 3000);
 				continue;
 			}
 			else if (button == A1)
@@ -221,12 +268,12 @@ char* get_player_move(uint8_t side)
 		while (1)
 		{
 			// get number
-			lcd_message("Specify number corresponding to the piece you wish to move to");
+			lcd_message("Specify number corresponding to the piece you wish to move to", side);
 			button = get_button_press(side);
 			
 			if (button == To || button == From || button == Go || button == Clr)
 			{
-				lcd_message("Invalid number.");
+				lcd_message_delay("Invalid number.", side, 3000);
 				continue;
 			}
 			else if (button == A1)
@@ -269,11 +316,13 @@ char* get_player_move(uint8_t side)
 			break;
 		}
 		
+		char response[80];
+		sprintf(response, "You chose [%s]. Is this correct? Press 'Go' or 'Clear'", move);
+		
 		// get user confirmation
 		while (1)
 		{
-			lcd_message(move);
-			lcd_message("Is this correct? Press 'Go' or 'Clear'");
+			lcd_message(response, side);
 			button = get_button_press(side);
 			if (button == Clr)
 			{
@@ -284,19 +333,42 @@ char* get_player_move(uint8_t side)
 			{
 				return move;
 			}
+			else
+			{
+				continue;	
+			}
 		}
-		
 	}
+	return "";
+}
+
+/**
+ * \brief sends a message to the lcd display of the user
+ */
+void lcd_message(unsigned char* msg, int side)
+{
+	//unsigned char resetCommand[3] = {0xFE, 0x51, '\0'}; // clear screen
+	//lcd_putstring(resetCommand, side);
+	lcd_putchar(0xFE, side);
+	lcd_putchar(0x51, side);
+	lcd_putstring(msg, side);
 }
 
 
 /**
  * \brief sends a message to the lcd display of the user
+ * \note delay param is used incase we have multiple lcd messages in series without
+ * requiring a button press
+ * \param delay delay in ms
  */
-void lcd_message(char* text)
+void lcd_message_delay(unsigned char* msg, int side, int delay)
 {
-	debug(text);
-	_delay_ms(1000);
+	//unsigned char resetCommand[3] = {0xFE, 0x51, '\0'}; // clear screen
+	//lcd_putstring(resetCommand, side);
+	lcd_putchar(0xFE, side);
+	lcd_putchar(0x51, side);
+	lcd_putstring(msg, side);
+	delay_ms(delay);
 }
 
 
@@ -307,60 +379,63 @@ void lcd_message(char* text)
 void activate_led(uint8_t posx, uint8_t posy)
 {
 	if (posx == 0)
-		LED_IOPORT.OUT = 0xff;	
+		PORTE.OUT = 0xff;	
 	else
-		LED_IOPORT.OUT = 0x00;
+		PORTE.OUT = 0x00;
 }
 
 
 /**
  * \brief returns an integer representing the button pressed by the user.
- * \note buttons in the low position are pressed, in the high position they are not pressed
  */
 uint8_t get_button_press(uint8_t side)
 {
-	uint8_t mask = 0x00;
-
 	// block while waiting for button press
-	while (mask == 0x00)
+	// \note eventually we will && with the other HMI button pressed pins
+	//while( gpio_pin_is_low(HMI1_BUTTON_PRESSED_PIN) && gpio_pin_is_low(HMI_SHARED_BUTTON_PRESSED_PIN)){}
+	while( gpio_pin_is_low(HMI1_BUTTON_PRESSED_PIN)){}
+	
+	// decode binary to decimal
+	int selection = 0;
+	//if (gpio_pin_is_high(HMI1_BUTTON_PRESSED_PIN))
+	//{
+	if (gpio_pin_is_low(HMI1_BUTTON_PIN1))
 	{
-		mask = ~BUTTON_IOPORT_1.IN & BUTTON_BITMASK_1;
-		mask |= (~BUTTON_IOPORT_2.IN & BUTTON_BITMASK_2) << BUTTON_BITPOSITION_2;
-	}
-	return mask;
-	
-	/* Use this kind of stuff when reading real values from buttons
-	
-		uint8_t mask = 0xF7;
+		selection += 1;	
+	}		
+	if (gpio_pin_is_low(HMI1_BUTTON_PIN2))
+	{
+		selection += 2;	
+	}		
+	if (gpio_pin_is_low(HMI1_BUTTON_PIN3))
+	{
+		selection += 4;	
+	}		
 
-		// block while waiting for button press
-		while (mask == 0xF7)
-		{
-			mask = ~BUTTON_IOPORT_1.IN & BUTTON_BITMASK_1;
-			mask |= (~BUTTON_IOPORT_2.IN & BUTTON_BITMASK_2) << BUTTON_BITPOSITION_2;
-		}
-		
-		switch(mask)
-		{
-			case 1 << 0:
-			return A1;
-			case 1 << 1:
-			return B2;
-			case 1 << 2:
-			return C3;
-			case 1 << 3:
-			return D4;
-			case 1 << 4:
-			return E5;
-			case 1 << 5:
-			return F6;
-			case 1 << 6:
-			return G7;
-			case 1 << 7:
-			return H8;
-		}
-		return ButtonError;
-		*/
+	// delay 250 ms so the user doesn't accidently "hold" the button for multiple button presses.
+	// Otherwise we have to test for edges...
+	_delay_ms(250);
+
+	switch(selection)
+	{
+		case 0:
+		return A1;
+		case 1:
+		return B2;
+		case 2:
+		return C3;
+		case 3:
+		return D4;
+		case 4:
+		return E5;
+		case 5:
+		return F6;
+		case 6:
+		return G7;
+		case 7:
+		return H8;
+	}
+	return ButtonError;
 }
 
 
@@ -385,4 +460,51 @@ void move_piece(uint8_t from_posx, uint8_t from_posy, uint8_t to_posx, uint8_t t
 		move_z_stepper(1);
 		center_at_origin();
 		*/
+}
+
+
+void lcd_putchar(unsigned char TXdata, int side)
+{
+
+	while ( !(USARTD0.STATUS & USART_DREIF_bm) ){}
+
+	/* Put data into buffer, sends the data */
+	USARTD0_DATA = TXdata;
+
+}
+
+
+/**
+ * \brief writes the specified string to the LCD
+ * \note since strings automatically print on lines 1, 3, 2, 4,
+ *		 we need to manually set the cursor every 20 characters.
+ *	     later we might want to create an algorithm to wrap text.
+ */
+void lcd_putstring(unsigned char* pcString, int side)
+{
+	int i = 0; // character # in sequence
+	int j = 0; // current display line #
+	while(*pcString)
+	{
+		if (i%20 == 0)
+		{
+			// set cursor to new line 
+			lcd_putchar(0xFE, side);
+			lcd_putchar(0x45, side);
+			int line_addr = j == 0 ? 0 : j == 1 ? 0x40 : j == 2 ? 0x14 : 0x54;
+			lcd_putchar(line_addr, side);
+			j++;
+		}
+		
+		lcd_putchar(*pcString++, side);
+		i++;
+	}
+}
+
+
+void delay_ms(int count) {
+	while(count--) {
+		_delay_ms(1);
+
+	}
 }
