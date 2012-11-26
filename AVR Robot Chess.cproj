@@ -75,7 +75,7 @@
       </OverrideVtorValue>
       <Channel>
         <host>127.0.0.1</host>
-        <port>3022</port>
+        <port>49220</port>
         <ssl>False</ssl>
       </Channel>
     </com_atmel_avrdbg_tool_simulator>
@@ -227,6 +227,9 @@
     <Compile Include="src\asf\xmega\boards\xmega_a1_xplained\init.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\ccp.s">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\chessengine.c">
       <SubType>compile</SubType>
     </Compile>
@@ -243,6 +246,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\io.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcddriver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcddriver.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\main.c">
@@ -270,12 +279,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\tests\iotest.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\tests\test.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\tests\test.h">
       <SubType>compile</SubType>
     </Compile>
     <None Include="src\asf.h">

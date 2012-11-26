@@ -20,20 +20,29 @@
 
 int main (void)
 {	
-	board_init();
+	//board_init();
 	
 	//*************INTEGRATION TESTS*******
 	integration_test_init();
 	//button_press_test(Player1);
 	//get_move_test(Player1);
-	game_play_no_motors_test(Player1);
+	//game_play_no_motors_test(Player1);
+	//xy_stepper_test();
+	//xyz_stepper_test();
+	//move_piece_test();
+	game_play_test(Player1);
+	//move_piece_test();
+	
 
 	//*********IO TESTS *******************
-	//io_test_init();
+	//led_test();
+	//x_stepper_test();
 	//serial_debug_test();
 	//x_stepper_test();
+	//y_stepper_test();
 	//lcd_test();
 	//button_press_test(1);
+	//z_stepper_test();
 	//clamp_servo_test();
 	//pawn_rush_test();	
 }

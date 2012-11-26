@@ -10,8 +10,11 @@
 #define INTEGRATIONTEST_H_
 
 void integration_test_init();
+void xyz_stepper_test();
 void button_press_test(int side);
 void get_move_test(int side);
 void game_play_no_motors_test(int side);
+void move_piece_test();
+void game_play_test(int side);
 
 #endif /* INTEGRATIONTEST_H_ */

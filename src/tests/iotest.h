@@ -14,9 +14,11 @@
 
 void io_test_init();
 void clamp_servo_test();
+void xy_stepper_test();
 void x_stepper_test();
+void y_stepper_test();
+void z_stepper_test();
 void lcd_test();
-void serial_debug_test();
-
+void led_test();
 
 #endif /* IOTEST_H_ */

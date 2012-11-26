@@ -9,15 +9,12 @@
 
 
 #include "enginetest.h"
-#include "test.h"
 #include "../chessengine.h"
 #include "../io.h"
 
 void pawn_rush_test()
 {
 	init_io();
-	
-	debug("init game engine.");
 			
 	while (1){		
 		
@@ -33,24 +30,19 @@ void pawn_rush_test()
 		{
 			char* mv = get_player_move(1);
 			player_move(cmd[i], &gameResult, &tookPieceFlag, &illegalMoveFlag);
-			debug("player mv:");
-			debug(cmd[i]);
 			
 			if (illegalMoveFlag)
 			{
-				debug("illegal move");
 				continue;
 			}
 			ai_move(&gameResult, &tookPieceFlag, resultMove);
 					
 			if (!tookPieceFlag)
 			{
-				debug("ai mv:");
-				debug(resultMove);
+				
 			}
 			else
 			{
-				debug("AI took player piece");
 				for (;;) {						
 				}	
 			}
